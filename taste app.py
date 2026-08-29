@@ -70,17 +70,15 @@ def create_pdf(text, user_name):
     filename = f"{user_name}_맞춤형_심층분석_리포트.pdf"
     doc = SimpleDocTemplate(filename, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
     
-    # 한글 폰트 등록 (Linux/Cloud 환경에 기본 설치된 맑은 고딕 또는 나눔고딕 대체 경로 확인)
     font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
     if not os.path.exists(font_path):
-        # 만약 나눔고딕이 없으면 윈도우 기본 폰트나 시스템 기본 폰트 시도 (또는 리포트랩 기본 폰트)
-        font_path = "NanumGothic.ttf" # 로컬 환경 대비
+        font_path = "NanumGothic.ttf"
     
     try:
         pdfmetrics.registerFont(TTFont('NanumGothic', font_path))
         font_name = 'NanumGothic'
     except:
-        font_name = 'Helvetica' # 폴백 (영문만 정상 출력되나 에러 방지)
+        font_name = 'Helvetica'
         
     styles = getSampleStyleSheet()
     
@@ -89,7 +87,7 @@ def create_pdf(text, user_name):
         fontName=font_name,
         fontSize=16,
         leading=22,
-        textColor=colors_hex := '#2A9D8F',
+        textColor='#2A9D8F',
         spaceAfter=15
     )
     
