@@ -6,22 +6,21 @@ import datetime
 import plotly.graph_objects as go
 
 # 1. 페이지 기본 설정 및 스타일
-st.set_page_config(page_title="다차원 성향 분석 리포트", page_icon="🔮", layout="centered")
+st.set_page_config(page_title="종합 성향 및 진로 심층 분석 리포트", page_icon="📋", layout="centered")
 
-st.title("🔮 다차원 성향 분석 리포트")
-st.write("다양한 차원의 데이터를 종합하여 입체적인 분석 결과와 도표를 제공합니다.")
+st.title("📋 종합 성향 및 진로 심층 분석 리포트")
+st.write("다양한 성향 데이터와 직업선호도(L형) 검사 결과를 바탕으로 가독성 높은 맞춤형 분석 리포트를 생성합니다.")
 
 # 2. 사용자 입력 폼
 with st.form("user_input_form"):
     st.subheader("기본 정보")
     
-    # 기본 정보 1열
     col1, col2, col3 = st.columns([2, 2, 1])
     with col1:
         name = st.text_input("이름", placeholder="예: 홍길동")
     with col2:
         birth = st.date_input(
-            "생년월일 (사주 분석용)",
+            "생년월일",
             min_value=datetime.date(1930, 1, 1),
             max_value=datetime.date(2026, 12, 31),
             value=datetime.date(1990, 1, 1)
@@ -29,7 +28,6 @@ with st.form("user_input_form"):
     with col3:
         gender = st.radio("성별", ["남성", "여성", "선택 안함"])
         
-    # 기본 정보 2열
     col4, col5, col6, col7 = st.columns(4)
     with col4:
         blood_type = st.selectbox("혈액형", ["A형", "B형", "O형", "AB형"])
@@ -38,7 +36,7 @@ with st.form("user_input_form"):
     with col6:
         mbti = st.text_input("MBTI", placeholder="예: INTJ")
     with col7:
-        job = st.text_input("직업/전공", placeholder="예: 디자이너")
+        job = st.text_input("직업/전공", placeholder="예: 마케터")
     
     st.markdown("---")
     
@@ -61,31 +59,28 @@ with st.form("user_input_form"):
         e6 = st.number_input("6번 (충실한 사람)", min_value=0, max_value=20, value=0)
         e9 = st.number_input("9번 (평화주의자)", min_value=0, max_value=20, value=0)
     
-    # 폼 제출 버튼
-    submitted = st.form_submit_button("다차원 분석 리포트 생성하기", use_container_width=True)
+    submitted = st.form_submit_button("심층 진로 분석 리포트 생성하기", use_container_width=True)
 
-# 3. PDF 생성 함수 (텍스트 리포트용)
+# 3. PDF 생성 함수
 def create_pdf(text, user_name):
     pdf = FPDF()
     pdf.add_page()
-    
-    pdf.set_font("Helvetica", size=12)
+    pdf.set_font("Helvetica", size=11)
     
     lines = text.split('\n')
     for line in lines:
         clean_line = line.replace('#', '').replace('*', '').strip()
         if clean_line:
-            pdf.multi_cell(0, 8, clean_line.encode('latin-1', 'replace').decode('latin-1'))
-            pdf.ln(2)
-    
-    filename = f"{user_name}_다차원분석_리포트.pdf"
+            pdf.multi_cell(0, 7, clean_line.encode('latin-1', 'replace').decode('latin-1'))
+            pdf.ln(1.5)
+            
+    filename = f"{user_name}_진로심층분석_리포트.pdf"
     pdf.output(filename)
     return filename
 
 # 4. 방사형 차트 생성 함수
 def create_radar_chart(scores):
     categories = ['1번(완벽)', '2번(조력)', '3번(성취)', '4번(개성)', '5번(탐구)', '6번(충성)', '7번(열정)', '8번(도전)', '9번(평화)']
-    # 레이더 차트는 시작점과 끝점이 이어져야 하므로 첫 번째 값을 마지막에 추가
     categories = [*categories, categories[0]]
     plot_scores = [*scores, scores[0]]
 
@@ -95,16 +90,16 @@ def create_radar_chart(scores):
                 r=plot_scores,
                 theta=categories,
                 fill='toself',
-                name='에니어그램 프로파일',
-                line_color='#FF6B6B',
-                fillcolor='rgba(255, 107, 107, 0.4)'
+                name='성향 프로파일',
+                line_color='#2A9D8F',
+                fillcolor='rgba(42, 157, 143, 0.3)'
             )
         ]
     )
     fig.update_layout(
         polar=dict(radialaxis=dict(visible=True, range=[0, 20])),
         showlegend=False,
-        title=dict(text="📊 나의 성향 밸런스 도표", font=dict(size=18)),
+        title=dict(text="📊 에니어그램 성향 밸런스 도표", font=dict(size=18)),
         margin=dict(l=40, r=40, t=60, b=40)
     )
     return fig
@@ -114,7 +109,7 @@ if submitted:
     if not name:
         st.warning("이름을 입력해주세요.")
     else:
-        with st.spinner("사주, 에니어그램, 별자리 등을 융합하여 다차원 분석 중입니다..."):
+        with st.spinner("직업선호도(L형) 및 심층 기질 데이터를 정밀 분석 중입니다..."):
             client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
             
             enneagram_scores = [e1, e2, e3, e4, e5, e6, e7, e8, e9]
@@ -123,21 +118,35 @@ if submitted:
                 f"6번({e6}점), 7번({e7}점), 8번({e8}점), 9번({e9}점)"
             )
             
-            # AI 프롬프트 (다차원 분석 지시)
+            # AI 프롬프트 (명칭 노출 금지 및 직업선호도 L형, 개조식/표 구조 강화)
             system_prompt = """
-            # ROLE: 다차원 운명 및 심리 분석 마스터 (사주 명리, 에니어그램, 점성술, 성격심리 통합 전문가)
-            # RULES:
-            1. 제공된 생년월일(사주 명리 관점), 에니어그램 점수, 별자리, 혈액형, MBTI, 직업 데이터를 모두 융합하여 하나의 일관된 스토리텔링으로 분석할 것.
-            2. 각 차원(사주, 에니어그램, 별자리, 혈액형)이 서로 어떻게 상호작용하고 보완하는지 입체적으로 설명할 것. (예: "사주상 불의 기운이 강한데, 에니어그램 7번 성향과 겹쳐 폭발적인 추진력을 냅니다.")
-            3. 긍정적인 잠재력뿐만 아니라, 기질적 결핍이나 주의해야 할 리스크도 함께 분석하여 현실적인 조언을 제공할 것.
-            4. 전문가답고 신뢰감 있는 어투를 사용할 것.
+            # ROLE: 최고 수준의 진로 심리 상담 전문가 및 수석 커리어 코치
+            # RULES (CRITICAL):
+            1. '사주', '에니어그램', '별자리', '혈액형'이라는 기법명 단어를 본문에 절대 직접 언급하지 말 것. 대신 타고난 기질, 내면의 심리적 동기, 성향적 특징으로 표현할 것.
+            2. 첨부된 '직업선호도 검사(L형) 결과지'의 체계(홀랜드 흥미 6유형: 현실형, 탐구형, 예술형, 사회형, 진취형, 관습형 / 성격 5요인: 외향성, 호감성, 성실성, 정서적 안정성, 개방성 / 생활사 9개 요인: 대인관계, 독립심, 야망 등)를 차용하여 아주 길고 깊이 있게 분석할 것.
+            3. 모든 분석 항목은 길고 장황한 산문 대신 **개조식 불렛포인트**와 **핵심 요약 표(Markdown Table)**를 적극 활용하여 가독성이 매우 높게 구성할 것.
+            4. 각 항목별로 구체적인 예시와 실천 가능한 맞춤형 조언을 풍부하게 작성할 것.
             
-            # OUTPUT FORMAT:
-            ## 🔮 다차원 종합 분석 리포트 ([이름] 님)
-            ### 1. 🌟 선천적 기질 및 운명의 흐름 (사주, 별자리, 혈액형 기반)
-            ### 2. 🧠 심리 동기 및 행동 패턴 (에니어그램, MBTI 중심)
-            ### 3. 💼 직업적 강점 및 사회생활 분석 (현재 직업과 성향의 궁합)
-            ### 4. 🚀 인생의 밸런스를 위한 마스터 조언
+            # OUTPUT FORMAT (마크다운 구조 엄수):
+            ## 📋 [이름] 님 종합 성향 및 진로 심층 분석 리포트
+            
+            ### 1. 🔍 핵심 기질 및 심층 성향 프로파일 (내면 동기 분석)
+            - (개조식 항목들로 깊이 있게 분석)
+            
+            ### 2. 🎯 직업 흥미 및 행동 패턴 정밀 진단 (L형 검사 기반)
+            - (홀랜드 유형 및 강점 영역 분석)
+            
+            | 분석 영역 | 주요 특징 및 수준 | 업무 환경 적합도 |
+            | :--- | :--- | :--- |
+            | **대인관계 및 협업** | ... | ... |
+            | **성실성 및 책임감** | ... | ... |
+            | **도전 정신 및 야망** | ... | ... |
+            
+            ### 3. 💼 맞춤형 직무 역량 및 추천 커리어 패스
+            - (직업/전공 연계 구체적 직무 제안)
+            
+            ### 4. 🚀 커리어 도약을 위한 실전 Action Plan
+            - (단기/장기 성장 전략 및 주의할 점)
             """
             
             user_prompt = f"""
@@ -148,12 +157,12 @@ if submitted:
             - 별자리: {zodiac}
             - MBTI: {mbti}
             - 직업(전공): {job}
-            - 에니어그램 전체 점수: {enneagram_text}
+            - 세부 성향 점수 분포: {enneagram_text}
             """
             
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
-                temperature=0.5,
+                temperature=0.4,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -162,22 +171,22 @@ if submitted:
             
             report_content = response.choices[0].message.content
             
-            st.success("다차원 리포트 생성이 완료되었습니다!")
+            st.success("심층 분석 리포트가 성공적으로 생성되었습니다!")
             
-            # [도표 출력 부분] 에니어그램 방사형 차트 그리기
+            # 에니어그램 방사형 차트 시각화
             st.plotly_chart(create_radar_chart(enneagram_scores), use_container_width=True)
             
-            # [리포트 출력 부분] AI 텍스트 리포트
-            st.markdown(f"<div style='background-color:#f0f2f6; padding:20px; border-radius:10px;'>{report_content}</div>", unsafe_allow_html=True)
+            # AI 분석 리포트 본문 출력
+            st.markdown(f"<div style='background-color:#f8f9fa; padding:25px; border-radius:12px; border:1px solid #e9ecef;'>{report_content}</div>", unsafe_allow_html=True)
             st.write("")
             
-            # 다운로드 버튼
+            # 파일 다운로드 버튼
             col_dl1, col_dl2 = st.columns(2)
             with col_dl1:
                 st.download_button(
                     label="📄 텍스트(.txt) 다운로드",
                     data=report_content,
-                    file_name=f"{name}_다차원_분석_리포트.txt",
+                    file_name=f"{name}_심층진로분석_리포트.txt",
                     mime="text/plain",
                     use_container_width=True
                 )
@@ -185,7 +194,7 @@ if submitted:
                 pdf_file = create_pdf(report_content, name)
                 with open(pdf_file, "rb") as f:
                     st.download_button(
-                        label="📕 PDF 텍스트 리포트 다운로드",
+                        label="📕 PDF 리포트 다운로드",
                         data=f,
                         file_name=pdf_file,
                         mime="application/pdf",
