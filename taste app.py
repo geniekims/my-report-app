@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 st.set_page_config(page_title="커리어 및 회복탄력성 심층 분석 리포트", page_icon="🌟", layout="centered")
 
 st.title("🌟 커리어 발전 및 회복탄력성 심층 분석 리포트")
-st.write("전문적인 성향 데이터와 직업선호도(L형) 검사를 기반으로, 커리어 성공 전략뿐만 아니라 마음의 회복탄력성과 인품 성장의 길을 제시합니다.")
+st.write("다각도의 성향 데이터와 직업선호도(L형) 검사를 기반으로, 커리어 성공 전략, 마음 근육(회복탄력성), 깊이 있는 인품 성장의 길을 풍성하고 디테일하게 제시합니다.")
 
 # 2. 사용자 입력 폼
 with st.form("user_input_form"):
@@ -59,22 +59,22 @@ with st.form("user_input_form"):
         e6 = st.number_input("6번 (충실한 사람)", min_value=0, max_value=20, value=0)
         e9 = st.number_input("9번 (평화주의자)", min_value=0, max_value=20, value=0)
     
-    submitted = st.form_submit_button("커리어 & 회복탄력성 심층 리포트 생성하기", use_container_width=True)
+    submitted = st.form_submit_button("풍성한 심층 분석 리포트 생성하기", use_container_width=True)
 
 # 3. PDF 생성 함수
 def create_pdf(text, user_name):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Helvetica", size=11)
+    pdf.set_font("Helvetica", size=10)
     
     lines = text.split('\n')
     for line in lines:
         clean_line = line.replace('#', '').replace('*', '').strip()
         if clean_line:
-            pdf.multi_cell(0, 7, clean_line.encode('latin-1', 'replace').decode('latin-1'))
-            pdf.ln(1.5)
+            pdf.multi_cell(0, 6, clean_line.encode('latin-1', 'replace').decode('latin-1'))
+            pdf.ln(1)
             
-    filename = f"{user_name}_커리어_회복탄력성_리포트.pdf"
+    filename = f"{user_name}_풍성한_심층분석_리포트.pdf"
     pdf.output(filename)
     return filename
 
@@ -91,8 +91,8 @@ def create_radar_chart(scores):
                 theta=categories,
                 fill='toself',
                 name='성향 프로파일',
-                line_color='#3A86FF',
-                fillcolor='rgba(58, 134, 255, 0.3)'
+                line_color='#7209B7',
+                fillcolor='rgba(114, 9, 183, 0.25)'
             )
         ]
     )
@@ -109,7 +109,7 @@ if submitted:
     if not name:
         st.warning("이름을 입력해주세요.")
     else:
-        with st.spinner("커리어 역량, 회복탄력성, 인품 및 성품 성장을 정밀 분석 중입니다..."):
+        with st.spinner("방대한 심층 데이터를 바탕으로 풍성하고 입체적인 리포트를 작성 중입니다..."):
             client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
             
             enneagram_scores = [e1, e2, e3, e4, e5, e6, e7, e8, e9]
@@ -118,41 +118,47 @@ if submitted:
                 f"6번({e6}점), 7번({e7}점), 8번({e8}점), 9번({e9}점)"
             )
             
-            # AI 프롬프트 (커리어 + 회복탄력성 + 인품향상 중심, 명칭 노출 금지, 개조식 및 표 활용)
+            # AI 프롬프트 (개조식의 깔끔함을 유지하되, 각 항목마다 풍성한 설명과 디테일을 담도록 지시)
             system_prompt = """
-            # ROLE: 최고 수준의 수석 커리어 코치 및 멘탈/인성 리더십 컨설턴트
+            # ROLE: 수석 커리어 컨설턴트, 심층 심리 분석가 및 인성 리더십 마스터
             # RULES (CRITICAL):
-            1. '사주', '에니어그램', '별자리', '혈액형'이라는 기법명 단어를 본문에 절대 직접 언급하지 말 것. 대신 타고난 기질, 내면의 심리적 동기, 고유의 성향적 특징으로 표현할 것.
-            2. 리포트의 핵심 초점을 다음 3가지 영역에 강력하게 맞출 것:
-               - **[커리어 성장]**: 직업선호도(L형) 검사 체계(홀랜드 6유형 및 성격 5요인)를 반영한 직무 강점 및 커리어 로드맵.
-               - **[회복탄력성(Resilience)]**: 역경, 스트레스, 번아웃 상황에서 다시 일어설 수 있는 내면의 힘과 마음 챙김 전략.
-               - **[인품 및 리더십 향상]**: 대인관계에서 신뢰를 얻고, 타인을 포용하며 성숙한 인품으로 거듭나기 위한 내면 성찰 과제.
-            3. 길고 지루한 서술식 문장을 최소화하고, **개조식 불렛포인트**와 **핵심 요약 표(Markdown Table)**를 적극 활용하여 가독성을 극대화할 것.
-            4. 통찰력 있고 따뜻하면서도 실천 가능한 구체적 조언을 담을 것.
+            1. '사주', '에니어그램', '별자리', '혈액형'이라는 기법명 단어를 본문에 절대 직접 언급하지 말 것. 대신 타고난 선천적 기질, 심리적 동기 구조, 내면의 에너지 패턴으로 표현할 것.
+            2. **개조식 형식을 엄수하되, 각 항목의 내용을 매우 풍성하고 깊이 있게 작성할 것.** 단순히 단답형으로 끝내지 말고, "왜 그런 성향이 나타나는지(원인)", "업무 및 일상에서 어떻게 드러나는지(현상)", "이를 어떻게 극대화하거나 보완해야 하는지(솔루션)"를 상세히 풀어쓸 것.
+            3. 리포트의 핵심 축인 **[커리어 성장]**, **[회복탄력성]**, **[인품 및 리더십]** 영역에서 각 항목당 최소 3~4개의 세부 하위 불렛포인트를 제공하여 정보의 밀도를 극대화할 것.
+            4. 직업선호도(L형) 체계(홀랜드 6유형 및 성격 5요인)와 연계하여 실무에서 즉시 활용할 수 있는 구체적인 가이드를 제공할 것.
             
             # OUTPUT FORMAT (마크다운 구조 엄수):
             ## 🌟 [이름] 님 커리어 및 회복탄력성 심층 분석 리포트
             
-            ### 1. 🔍 심리 동기 분석
-            - (기질적 강점과 에너지의 원천 분석)
+            ### 1. 🔍 타고난 본질 및 내면의 심리 동기 정밀 해부
+            - **에너지의 원천과 행동 동기**: (풍성하고 상세한 설명)
+            - **무의식적 방어기제와 스트레스 유발 요인**: (풍성하고 상세한 설명)
+            - **타인이 바라보는 첫인상과 실제 내면의 괴리**: (풍성하고 상세한 설명)
             
-            ### 2. 💼 커리어 로드맵 및 직무 역량
-            - (직업/전공과 연계한 핵심 직무 경쟁력 분석)
+            ### 2. 💼 직업선호도(L형) 기반 커리어 로드맵 및 핵심 직무 역량
+            - **강점 극대화 영역 (주력 직무 매칭)**: (풍성하고 상세한 설명)
+            - **잠재적 취약점 및 리스크 관리 전략**: (풍성하고 상세한 설명)
+            - **조직 내 협업 및 성과 창출을 위한 무기**: (풍성하고 상세한 설명)
             
-            ### 3. 🌱 회복탄력성(Resilience) 진단
-            - (스트레스 취약점 및 마음 근육을 단단하게 만드는 실천법)
+            ### 3. 🌱 역경 극복 및 멘탈 강화를 위한 회복탄력성(Resilience) 솔루션
+            - **번아웃 및 위기 상황 시 나타나는 심리적 반응 패턴**: (풍성하고 상세한 설명)
+            - **감정적 회복 속도를 높이는 나만의 마음 챙김 루틴**: (풍성하고 상세한 설명)
+            - **실패를 성장의 자양분으로 전환하는 인지적 유연성 확보 방안**: (풍성하고 상세한 설명)
             
-            ### 4. 🤝 리더십 가이드
-            - (타인과의 소통 방식 성찰 및 덕망 있는 인품 향상 솔루션)
+            ### 4. 🤝 성숙한 인품과 덕망 있는 리더십 빌드업 가이드
+            - **대인관계 속 신뢰 형성을 위한 소통의 기술**: (풍성하고 상세한 설명)
+            - **타인을 포용하고 영향력을 넓히는 품격 있는 태도**: (풍성하고 상세한 설명)
+            - **갈등 상황 발생 시 지혜로운 중재 및 해결 역량**: (풍성하고 상세한 설명)
             
-            | 분석 영역 | 핵심 진단 결과 | 실천적 성장 솔루션 |
+            | 분석 영역 | 핵심 진단 결과 (Depth Summary) | 실천적 성장 솔루션 (Action Items) |
             | :--- | :--- | :--- |
             | **커리어 및 성취** | ... | ... |
             | **마음 근육 (회복력)** | ... | ... |
             | **인품 및 대인관계** | ... | ... |
             
-            ### 5. 🚀 Master Action Plan
-            - (단기/장기 삶의 밸런스 유지 전략)
+            ### 5. 🚀 일상의 성장을 위한 Master Action Plan (단기/장기)
+            - **즉시 실천 가능한 단기 과제 (1~3개월)**: (구체적인 실천 행동 3가지 이상)
+            - **장기적 커리어 및 인격 완성 로드맵 (1년 이상)**: (지향해야 할 궁극적 방향성)
             """
             
             user_prompt = f"""
@@ -177,7 +183,7 @@ if submitted:
             
             report_content = response.choices[0].message.content
             
-            st.success("심층 리포트가 성공적으로 생성되었습니다!")
+            st.success("풍성한 심층 리포트가 성공적으로 생성되었습니다!")
             
             # 성향 방사형 차트 시각화
             st.plotly_chart(create_radar_chart(enneagram_scores), use_container_width=True)
@@ -192,7 +198,7 @@ if submitted:
                 st.download_button(
                     label="📄 텍스트(.txt) 다운로드",
                     data=report_content,
-                    file_name=f"{name}_커리어_회복탄력성_리포트.txt",
+                    file_name=f"{name}_풍성한_커리어_회복탄력성_리포트.txt",
                     mime="text/plain",
                     use_container_width=True
                 )
