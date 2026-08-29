@@ -1,6 +1,10 @@
 import streamlit as st
 from openai import OpenAI
-from weasyprint import HTML
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 import os
 import datetime
 import plotly.graph_objects as go
@@ -61,78 +65,81 @@ with st.form("user_input_form"):
     
     submitted = st.form_submit_button("심층 리포트 생성하기", use_container_width=True)
 
-# 3. HTML 및 WeasyPrint를 이용한 한글 완벽 지원 PDF 생성 함수
+# 3. ReportLab을 이용한 한글 완벽 지원 PDF 생성 함수
 def create_pdf(text, user_name):
-    # 간단한 마크다운을 HTML 태그로 변환
-    html_body = "<ul>"
+    filename = f"{user_name}_맞춤형_심층분석_리포트.pdf"
+    doc = SimpleDocTemplate(filename, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
+    
+    # 한글 폰트 등록 (Linux/Cloud 환경에 기본 설치된 맑은 고딕 또는 나눔고딕 대체 경로 확인)
+    font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
+    if not os.path.exists(font_path):
+        # 만약 나눔고딕이 없으면 윈도우 기본 폰트나 시스템 기본 폰트 시도 (또는 리포트랩 기본 폰트)
+        font_path = "NanumGothic.ttf" # 로컬 환경 대비
+    
+    try:
+        pdfmetrics.registerFont(TTFont('NanumGothic', font_path))
+        font_name = 'NanumGothic'
+    except:
+        font_name = 'Helvetica' # 폴백 (영문만 정상 출력되나 에러 방지)
+        
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle(
+        'ReportTitle',
+        fontName=font_name,
+        fontSize=16,
+        leading=22,
+        textColor=colors_hex := '#2A9D8F',
+        spaceAfter=15
+    )
+    
+    h_style = ParagraphStyle(
+        'ReportHeader',
+        fontName=font_name,
+        fontSize=13,
+        leading=18,
+        textColor='#264653',
+        spaceBefore=12,
+        spaceAfter=6
+    )
+    
+    body_style = ParagraphStyle(
+        'ReportBody',
+        fontName=font_name,
+        fontSize=10,
+        leading=15,
+        textColor='#333333',
+        spaceAfter=4
+    )
+
+    story = []
+    story.append(Paragraph(f"[ {user_name} 님 맞춤형 심층 분석 리포트 ]", title_style))
+    story.append(Spacer(1, 10))
+    
     for line in text.split('\n'):
         line = line.strip()
+        if not line:
+            continue
         if line.startswith('## '):
-            html_body += f"</ul><h2>{line[3:]}</h2><ul>"
+            story.append(Spacer(1, 10))
+            story.append(Paragraph(line[3:], title_style))
         elif line.startswith('### '):
-            html_body += f"</ul><h3>{line[4:]}</h3><ul>"
+            story.append(Paragraph(line[4:], h_style))
         elif line.startswith('- '):
-            html_body += f"<li>{line[2:]}</li>"
+            story.append(Paragraph(f"• {line[2:]}", body_style))
         elif line.startswith('|'):
-            # 표 형식 처리 (간이)
             if '---' in line:
                 continue
             cols = [c.strip() for c in line.split('|')[1:-1]]
-            html_body += f"</ul><div style='margin: 5px 0;'><b>{cols[0]}</b>: {cols[1]} | <i>{cols[2]}</i></div><ul>"
-        elif line:
-            html_body += f"<p>{line}</p>"
-    html_body += "</ul>"
-
-    html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <style>
-            @page {{
-                size: A4;
-                margin: 20mm;
-            }}
-            body {{
-                font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-                color: #333333;
-                line-height: 1.6;
-                font-size: 11pt;
-            }}
-            h2 {{
-                color: #2A9D8F;
-                border-bottom: 2px solid #2A9D8F;
-                padding-bottom: 5px;
-                margin-top: 25px;
-            }}
-            h3 {{
-                color: #264653;
-                margin-top: 15px;
-            }}
-            ul {{
-                margin-bottom: 10px;
-                padding-left: 20px;
-            }}
-            li {{
-                margin-bottom: 6px;
-            }}
-            p {{
-                margin-bottom: 8px;
-            }}
-        </style>
-    </head>
-    <body>
-        <h1>[ {user_name} 님 맞춤형 심층 분석 리포트 ]</h1>
-        {html_body}
-    </body>
-    </html>
-    """
-    
-    filename = f"{user_name}_맞춤형_심층분석_리포트.pdf"
-    HTML(string=html_content).write_pdf(filename)
+            if len(cols) >= 3:
+                story.append(Paragraph(f"<b>[{cols[0]}]</b> {cols[1]} / <i>{cols[2]}</i>", body_style))
+        else:
+            story.append(Paragraph(line, body_style))
+            
+    doc.build(story)
     return filename
 
-# 4. 방사형 차트 생성 함수 (기존 스타일 유지)
+# 4. 방사형 차트 생성 함수
 def create_radar_chart(scores):
     categories = ['1번(완벽)', '2번(조력)', '3번(성취)', '4번(개성)', '5번(탐구)', '6번(충성)', '7번(열정)', '8번(도전)', '9번(평화)']
     categories = [*categories, categories[0]]
