@@ -6,10 +6,10 @@ import datetime
 import plotly.graph_objects as go
 
 # 1. 페이지 기본 설정 및 스타일
-st.set_page_config(page_title="인문학 기반 커리어 및 회복탄력성 리포트", page_icon="🏛️", layout="centered")
+st.set_page_config(page_title="커리어 및 회복탄력성 심층 분석 리포트", page_icon="🧭", layout="centered")
 
-st.title("🏛️ 인문학 기반 커리어 및 회복탄력성 심층 분석 리포트")
-st.write("다각도의 성향 데이터와 고전 인문학적 통찰을 융합하여, 커리어 성공 전략, 회복탄력성, 성숙한 인품 성장을 위한 맞춤형 지침을 제공합니다.")
+st.title("🧭 개인 맞춤형 커리어 및 회복탄력성 심층 분석 리포트")
+st.write("다각도의 성향 데이터와 내면의 심층 통찰을 융합하여, 커리어 성공 전략, 회복탄력성, 성숙한 인품 성장을 위한 맞춤형 지침을 제공합니다.")
 
 # 2. 사용자 입력 폼
 with st.form("user_input_form"):
@@ -59,7 +59,7 @@ with st.form("user_input_form"):
         e6 = st.number_input("6번 (충실한 사람)", min_value=0, max_value=20, value=0)
         e9 = st.number_input("9번 (평화주의자)", min_value=0, max_value=20, value=0)
     
-    submitted = st.form_submit_button("인문학 처방 심층 리포트 생성하기", use_container_width=True)
+    submitted = st.form_submit_button("심층 리포트 생성하기", use_container_width=True)
 
 # 3. PDF 생성 함수
 def create_pdf(text, user_name):
@@ -74,11 +74,11 @@ def create_pdf(text, user_name):
             pdf.multi_cell(0, 6, clean_line.encode('latin-1', 'replace').decode('latin-1'))
             pdf.ln(1)
             
-    filename = f"{user_name}_인문학_처방_심층분석_리포트.pdf"
+    filename = f"{user_name}_맞춤형_심층분석_리포트.pdf"
     pdf.output(filename)
     return filename
 
-# 4. 방사형 차트 생성 함수 (에니어그램)
+# 4. 방사형 차트 생성 함수 (기존 스타일 유지)
 def create_radar_chart(scores):
     categories = ['1번(완벽)', '2번(조력)', '3번(성취)', '4번(개성)', '5번(탐구)', '6번(충성)', '7번(열정)', '8번(도전)', '9번(평화)']
     categories = [*categories, categories[0]]
@@ -104,35 +104,12 @@ def create_radar_chart(scores):
     )
     return fig
 
-# 5. 핵심 역량 바 차트 생성 함수 (시각 도표 추가)
-def create_bar_chart():
-    categories = ['커리어 전문성', '회복탄력성(멘탈)', '인품 및 리더십', '인문학적 통찰']
-    values = [85, 78, 82, 90]
-    
-    fig = go.Figure(
-        data=[
-            go.Bar(
-                x=categories,
-                y=values,
-                marker_color=['#2A9D8F', '#E76F51', '#F4A261', '#457B9D'],
-                text=values,
-                textposition='auto'
-            )
-        ]
-    )
-    fig.update_layout(
-        title=dict(text="📊 주요 성장 잠재력 및 역량 진단 지수", font=dict(size=18)),
-        yaxis=dict(range=[0, 100], title="점수 (100점 만점)"),
-        margin=dict(l=40, r=40, t=60, b=40)
-    )
-    return fig
-
-# 6. AI 호출 및 결과 출력 로직
+# 5. AI 호출 및 결과 출력 로직
 if submitted:
     if not name:
         st.warning("이름을 입력해주세요.")
     else:
-        with st.spinner("인문학적 고전 처방 및 다차원 심층 데이터를 정밀 분석 중입니다..."):
+        with st.spinner("다차원 심층 데이터와 고유 성향 프로파일을 정밀 분석 중입니다..."):
             client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
             
             enneagram_scores = [e1, e2, e3, e4, e5, e6, e7, e8, e9]
@@ -141,18 +118,18 @@ if submitted:
                 f"6번({e6}점), 7번({e7}점), 8번({e8}점), 9번({e9}점)"
             )
             
-            # AI 프롬프트 (심플한 제목, 풍성한 내용, 인문학/고전 교육 중심 마스터 액션 플랜)
+            # AI 프롬프트 (본문에서는 '인문학' 단어 배제, 오직 Master Action Plan에서만 인문학/고전 교육 처방)
             system_prompt = """
-            # ROLE: 수석 인문학 멘토, 커리어 컨설턴트 및 심층 심리 분석가
+            # ROLE: 수석 커리어 컨설턴트 및 심층 심리 분석가
             # RULES (CRITICAL):
             1. '사주', '에니어그램', '별자리', '혈액형'이라는 기법명 단어를 본문에 절대 직접 언급하지 말 것. 대신 타고난 선천적 기질, 심리적 동기 구조, 내면의 에너지 패턴으로 표현할 것.
-            2. 각 섹션의 대제목은 요구된 대로 **매우 심플하게** 작성할 것 (예: "심리 동기 분석", "커리어 로드맵", "회복탄력성 솔루션", "인품 향상 가이드", "Master Action Plan").
-            3. 개조식 불렛포인트 형식을 엄수하되, 각 항목마다 풍성하고 깊이 있는 설명(원인, 현상, 솔루션)을 제공할 것.
-            4. **마스터 액션 플랜(Master Action Plan) 및 전반적인 솔루션의 핵심 축을 반드시 '인문학 및 고전(동서양 철학, 역사, 문학 등)에 대한 학습과 교육'에 맞출 것.** 삶의 근본적인 지혜와 멘탈 강화를 위해 고전 읽기와 인문학 교육이 왜 필수적인지 설득력 있게 제안할 것.
-            5. 직업선호도(L형) 체계와 연계하여 실무와 인격 수양에 즉시 적용할 수 있는 구체적인 가이드를 담을 것.
+            2. **'인문학' 또는 '고전'이라는 단어는 1번~4번 섹션 및 표(Table) 안에서는 절대 사용하지 말 것.** 본문에서는 '내면 성찰', '철학적 사유', '본질적 통찰', '인격 수양' 등의 세련된 표현을 사용할 것.
+            3. **오직 마지막 'Master Action Plan' 섹션에서만 명확한 핵심 솔루션으로서 '인문학 및 고전 교육'을 제시할 것.** (예: "근본적인 멘탈 강화와 리더십 확장을 위해 동서양 고전 독서 및 인문학 교육 이수를 적극 권장합니다.")
+            4. 각 섹션의 대제목은 요구된 대로 **매우 심플하게** 작성할 것 (예: "심리 동기 분석", "커리어 로드맵", "회복탄력성 솔루션", "인품 향상 가이드", "Master Action Plan").
+            5. 개조식 불렛포인트 형식을 엄수하되, 각 항목마다 풍성하고 깊이 있는 설명(원인, 현상, 솔루션)을 제공할 것.
             
             # OUTPUT FORMAT (마크다운 구조 엄수):
-            ## 🌟 [이름] 님 커리어 및 인문학 심층 분석 리포트
+            ## 🌟 [이름] 님 맞춤형 심층 분석 리포트
             
             ### 1. 심리 동기 분석
             - **에너지의 원천과 행동 동기**: (풍성하고 상세한 설명)
@@ -166,22 +143,22 @@ if submitted:
             
             ### 3. 회복탄력성 솔루션
             - **번아웃 및 위기 시 심리적 반응 패턴**: (풍성하고 상세한 설명)
-            - **고전 인문학을 통한 내면 근육 강화법**: (풍성하고 상세한 설명)
+            - **내면 근육 강화 및 위기 대처법**: (풍성하고 상세한 설명)
             - **실패를 성장의 자양분으로 바꾸는 통찰력**: (풍성하고 상세한 설명)
             
             ### 4. 인품 향상 가이드
             - **대인관계 속 신뢰 형성과 소통의 지혜**: (풍성하고 상세한 설명)
             - **타인을 포용하는 덕망 있는 태도**: (풍성하고 상세한 설명)
-            - **인문학적 사유를 통한 인격 완성**: (풍성하고 상세한 설명)
+            - **균형 잡힌 사유를 통한 인격 완성**: (풍성하고 상세한 설명)
             
-            | 분석 영역 | 핵심 진단 결과 (Depth Summary) | 인문학적 처방 솔루션 (Prescription) |
+            | 분석 영역 | 핵심 진단 결과 (Depth Summary) | 맞춤형 성장 솔루션 (Prescription) |
             | :--- | :--- | :--- |
             | **커리어 및 성취** | ... | ... |
             | **마음 근육 (회복력)** | ... | ... |
             | **인품 및 대인관계** | ... | ... |
             
             ### 5. Master Action Plan
-            - **인문학 및 고전 교육 이수 계획 (핵심 제안)**: (동서양 고전 독서, 인문학 강좌 수강 등 구체적 실행 방안 3가지 이상 상세 기술)
+            - **인문학 및 고전 교육 이수 계획 (핵심 제안)**: (동서양 고전 독서, 인문학 심화 강좌 수강 등 구체적 실행 방안 3가지 이상 상세 기술)
             - **단기 및 장기 삶의 밸런스 유지 전략**: (지향해야 할 궁극적 방향성)
             """
             
@@ -207,13 +184,10 @@ if submitted:
             
             report_content = response.choices[0].message.content
             
-            st.success("인문학 처방 리포트가 성공적으로 생성되었습니다!")
+            st.success("심층 리포트가 성공적으로 생성되었습니다!")
             
-            # 시각 도표 1: 에니어그램 방사형 차트
+            # 시각 도표 출력 (기존 선호하신 방사형 차트 형태 유지)
             st.plotly_chart(create_radar_chart(enneagram_scores), use_container_width=True)
-            
-            # 시각 도표 2: 핵심 역량 막대 차트 (추가된 시각 도표)
-            st.plotly_chart(create_bar_chart(), use_container_width=True)
             
             # 리포트 본문 출력
             st.markdown(f"<div style='background-color:#f8f9fa; padding:25px; border-radius:12px; border:1px solid #e9ecef;'>{report_content}</div>", unsafe_allow_html=True)
@@ -225,7 +199,7 @@ if submitted:
                 st.download_button(
                     label="📄 텍스트(.txt) 다운로드",
                     data=report_content,
-                    file_name=f"{name}_인문학처방_리포트.txt",
+                    file_name=f"{name}_심층분석_리포트.txt",
                     mime="text/plain",
                     use_container_width=True
                 )
