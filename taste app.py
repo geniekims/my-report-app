@@ -1,6 +1,6 @@
 import streamlit as st
 from openai import OpenAI
-from fpdf import FPDF
+from weasyprint import HTML
 import os
 import datetime
 import plotly.graph_objects as go
@@ -61,21 +61,75 @@ with st.form("user_input_form"):
     
     submitted = st.form_submit_button("심층 리포트 생성하기", use_container_width=True)
 
-# 3. PDF 생성 함수
+# 3. HTML 및 WeasyPrint를 이용한 한글 완벽 지원 PDF 생성 함수
 def create_pdf(text, user_name):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Helvetica", size=10)
+    # 간단한 마크다운을 HTML 태그로 변환
+    html_body = "<ul>"
+    for line in text.split('\n'):
+        line = line.strip()
+        if line.startswith('## '):
+            html_body += f"</ul><h2>{line[3:]}</h2><ul>"
+        elif line.startswith('### '):
+            html_body += f"</ul><h3>{line[4:]}</h3><ul>"
+        elif line.startswith('- '):
+            html_body += f"<li>{line[2:]}</li>"
+        elif line.startswith('|'):
+            # 표 형식 처리 (간이)
+            if '---' in line:
+                continue
+            cols = [c.strip() for c in line.split('|')[1:-1]]
+            html_body += f"</ul><div style='margin: 5px 0;'><b>{cols[0]}</b>: {cols[1]} | <i>{cols[2]}</i></div><ul>"
+        elif line:
+            html_body += f"<p>{line}</p>"
+    html_body += "</ul>"
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            @page {{
+                size: A4;
+                margin: 20mm;
+            }}
+            body {{
+                font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+                color: #333333;
+                line-height: 1.6;
+                font-size: 11pt;
+            }}
+            h2 {{
+                color: #2A9D8F;
+                border-bottom: 2px solid #2A9D8F;
+                padding-bottom: 5px;
+                margin-top: 25px;
+            }}
+            h3 {{
+                color: #264653;
+                margin-top: 15px;
+            }}
+            ul {{
+                margin-bottom: 10px;
+                padding-left: 20px;
+            }}
+            li {{
+                margin-bottom: 6px;
+            }}
+            p {{
+                margin-bottom: 8px;
+            }}
+        </style>
+    </head>
+    <body>
+        <h1>[ {user_name} 님 맞춤형 심층 분석 리포트 ]</h1>
+        {html_body}
+    </body>
+    </html>
+    """
     
-    lines = text.split('\n')
-    for line in lines:
-        clean_line = line.replace('#', '').replace('*', '').strip()
-        if clean_line:
-            pdf.multi_cell(0, 6, clean_line.encode('latin-1', 'replace').decode('latin-1'))
-            pdf.ln(1)
-            
     filename = f"{user_name}_맞춤형_심층분석_리포트.pdf"
-    pdf.output(filename)
+    HTML(string=html_content).write_pdf(filename)
     return filename
 
 # 4. 방사형 차트 생성 함수 (기존 스타일 유지)
@@ -118,7 +172,6 @@ if submitted:
                 f"6번({e6}점), 7번({e7}점), 8번({e8}점), 9번({e9}점)"
             )
             
-            # AI 프롬프트 (Master Action Plan의 3번째 항목으로 인문학 및 고전 교육 이수 배치)
             system_prompt = """
             # ROLE: 수석 커리어 컨설턴트 및 심층 심리 분석가
             # RULES (CRITICAL):
