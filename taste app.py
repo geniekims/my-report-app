@@ -2,7 +2,7 @@ import streamlit as st
 from openai import OpenAI
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
-from reportlab.graphics.shapes import Drawing, Rect, String, Line, Group
+from reportlab.graphics.shapes import Drawing, Rect, String
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
@@ -28,14 +28,22 @@ st.markdown("""
 
 st.markdown("<h1 style='text-align: center; color: #2B4C7E; background-color:#E9EEF5; padding:20px; border-radius:8px;'>심층 역량 및 직무 적합도 평가 보고서</h1>", unsafe_allow_html=True)
 
-# 2. 사용자 입력 폼
+# 2. 사용자 입력 폼 (MBTI 추가)
 with st.form("user_input_form"):
     st.markdown("### 👤 기본 프로필 및 심리 성향 진단")
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
     with col1: name = st.text_input("성명", placeholder="예: 주진희")
-    with col2: birth = st.date_input("생년월일 (기질 및 별자리 자동 유추 기준)", value=datetime.date(1990, 1, 1))
+    with col2: birth = st.date_input("생년월일 (기질 및 별자리 자동 유추)", value=datetime.date(1990, 1, 1))
     with col3: blood_type = st.selectbox("혈액형", ["A형", "B형", "O형", "AB형"])
-    with col4: job = st.text_input("직무 / 전공", placeholder="예: 데이터 분석가")
+    
+    mbti_list = [
+        "ISTJ", "ISFJ", "INFJ", "INTJ", 
+        "ISTP", "ISFP", "INFP", "INTP", 
+        "ESTP", "ESFP", "ENFP", "ENTP", 
+        "ESTJ", "ESFJ", "ENFJ", "ENTJ"
+    ]
+    with col4: mbti = st.selectbox("MBTI", mbti_list)
+    with col5: job = st.text_input("직무 / 전공", placeholder="예: 데이터 분석가")
     
     st.markdown("---")
     st.markdown("### 📊 다차원 내면 동기 척도 (0~20점)")
@@ -69,7 +77,7 @@ def create_bar_drawing(title, categories, scores, max_val=100):
         d.add(Rect(75, y+1, 120, 8, fillColor=colors.HexColor('#E2E8F0'), strokeColor=None))
         bar_width = (score / max_val) * 120
         bar_color = colors.HexColor('#2B4C7E') if score >= 60 else colors.HexColor('#D9534F')
-        if max_val == 20: bar_color = colors.HexColor('#2B4C7E') # 동기는 모두 파란색
+        if max_val == 20: bar_color = colors.HexColor('#2B4C7E')
         d.add(Rect(75, y+1, bar_width, 8, fillColor=bar_color, strokeColor=None))
         d.add(String(200, y, f"{score}", fontName='NanumGothicBold', fontSize=8, fillColor=colors.HexColor('#333333')))
         y -= 22
@@ -100,12 +108,11 @@ def create_pdf(text, user_name, motiv_scores, big5_scores, sw_scores):
     story.append(main_banner)
     story.append(Spacer(1, 15))
     
-    # 지표 시각화 컴포넌트 배치
     d1 = create_bar_drawing("내면 동기 밸런스 프로파일 (0~20)", ['완벽·조력·성취', '독창·탐구·책임', '열정·결단·조화'], [sum(motiv_scores[:3])//3, sum(motiv_scores[3:6])//3, sum(motiv_scores[6:])//3], 20)
-    d2 = create_bar_drawing("성성 5요인 진단 (T-Score)", ['외향성', '호감성', '성실성', '정서안정성', '개방성'], big5_scores, 100)
+    d2 = create_bar_drawing("성격 5요인 진단 (T-Score)", ['외향성', '호감성', '성실성', '정서안정성', '개방성'], big5_scores, 100)
     d3 = create_bar_drawing("직무 역량 분포 (Blue:강점)", ['기획분석력', '추진리더십', '협업소통력', '창의문제해결', '위기관리력'], sw_scores, 100)
     
-    comment_p = Paragraph("<b>[도표 종합 분석 코멘트]</b><br/><br/>본 분석 모델은 대상자의 고유 기질적 특성, 다차원 심리 동기 구조, 그리고 현업 직무 수행에 필요한 핵심 역량을 정밀 융합하여 도출되었습니다.<br/><br/>푸른색 바는 조직 내에서 즉시 발휘될 수 있는 <b>핵심 강점 영역</b>을 의미합니다.", body_style)
+    comment_p = Paragraph("<b>[도표 종합 분석 코멘트]</b><br/><br/>본 분석 모델은 대상자의 고유 기질적 특성, MBTI 성향, 다차원 심리 동기 구조, 그리고 현업 직무 수행에 필요한 핵심 역량을 정밀 융합하여 도출되었습니다.<br/><br/>푸른색 바는 조직 내에서 즉시 발휘될 수 있는 <b>핵심 강점 영역</b>을 의미합니다.", body_style)
     
     chart_table = Table([
         [d1, d2],
@@ -166,25 +173,25 @@ def create_pdf(text, user_name, motiv_scores, big5_scores, sw_scores):
 if submitted:
     if not name: st.warning("성명을 입력해주세요.")
     else:
-        with st.spinner("대상자의 심층 데이터를 복합 분석하여 종합 리포트 및 지표를 구성 중입니다... (약 20~30초 소요)"):
+        with st.spinner("대상자의 MBTI 및 심층 데이터를 복합 분석하여 종합 리포트와 지표를 구성 중입니다... (약 20~30초 소요)"):
             client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
             
             system_prompt = """
             # ROLE: 글로벌 수석 커리어 컨설턴트 및 조직 심리 전략가
             # RULES:
             1. 분량 규정: 반드시 A4 2페이지 분량이 꽉 찰 수 있도록 각 하위 섹션마다 최소 500자 이상 구체적으로 작성할 것.
-            2. 데이터 자동 유추: 제공된 생년월일(생일 월/일을 통해 별자리 및 기질 자동 유추)과 혈액형, 내면 동기 점수 9개를 복합 분석하여, 
+            2. 데이터 복합 유추: 제공된 MBTI, 생년월일(별자리/기질 유추), 혈액형, 내면 동기 점수 9개를 입체적으로 분석하여, 
                - 첫 번째 줄: 성격 5요인 점수 5개 (외향, 호감, 성실, 정서안정, 개방 / 0~100점)
                - 두 번째 줄: 직무 역량 점수 5개 (기획분석, 추진리더십, 협업소통, 창의문제해결, 위기관리 / 0~100점)
                를 각각 쉼표로 구분하여 숫자만 작성할 것. (예: 65,80,75,45,70 / 85,65,80,70,45)
-            3. 금지어 철저 준수: 리포트 본문 내에서 '사주', '명리', '별자리', '에니어그램' 등 출처를 유추할 수 있는 키워드는 절대 언급 금지. 완벽한 비즈니스 심리 진단 보고서 톤 유지.
+            3. 금지어 철저 준수: 리포트 본문 내에서 '사주', '명리', '별자리' 등 출처를 유추할 수 있는 키워드는 절대 언급 금지. (단, MBTI 성향 유형은 전문적인 심리 진단 지표로서 본문 내 자연스럽게 활용 가능). 완벽한 비즈니스 진단 보고서 톤 유지.
             4. 아래 OUTPUT FORMAT의 마크다운(##) 구조를 정확히 준수할 것.
             
             # OUTPUT FORMAT:
             [첫 줄]: 성격 5요인 점수 5개 (예: 65,80,75,45,70)
             [둘째 줄]: 직무 역량 점수 5개 (예: 85,65,80,70,45)
             ## 심리 동기 및 행동 패턴 분석
-            - **에너지 원천과 행동 동기**: (매우 상세하게 기술)
+            - **에너지 원천과 행동 동기**: (MBTI 성향 및 내면 동기를 연계하여 매우 상세하게 기술)
             - **성격적 강점과 업무 스타일**: (매우 상세하게 기술)
             - **무의식적 스트레스 요인 및 대응 기제**: (매우 상세하게 기술)
             
@@ -206,7 +213,7 @@ if submitted:
             - **전문성 심화 교육 이수를 통한 통찰력 강화**: (필요성 설명)
             """
             
-            user_data = f"- 이름: {name}, 직무: {job}\n- 생년월일: {birth}, 혈액형: {blood_type}\n- 내면동기척도: 완벽({e1}),조력({e2}),성취({e3}),독창({e4}),탐구({e5}),책임({e6}),열정({e7}),결단({e8}),조화({e9})"
+            user_data = f"- 이름: {name}, 직무: {job}\n- MBTI: {mbti}, 생년월일: {birth}, 혈액형: {blood_type}\n- 내면동기척도: 완벽({e1}),조력({e2}),성취({e3}),독창({e4}),탐구({e5}),책임({e6}),열정({e7}),결단({e8}),조화({e9})"
             
             response = client.chat.completions.create(model="gpt-4o-mini", temperature=0.6, messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_data}])
             raw_response = response.choices[0].message.content.strip()
