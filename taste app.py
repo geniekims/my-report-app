@@ -41,7 +41,7 @@ st.markdown("""
 st.markdown("""
     <div style='background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%); padding: 30px; border-radius: 12px; text-align: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
         <h1 style='color: white; margin-bottom: 10px; font-size: 28px;'>Executive Intelligence Report</h1>
-        <p style='color: #94A3B8; font-size: 15px; margin: 0;'>9원 성향 점수별 방사형 가시화 솔루션</p>
+        <p style='color: #94A3B8; font-size: 15px; margin: 0;'>방사형 가시화 도표 및 에니어그램 심층 분석 솔루션</p>
     </div>
 """, unsafe_allow_html=True)
 
@@ -63,8 +63,8 @@ with st.form("user_input_form"):
         job = st.text_input("직무 / 전공", value="생산직", placeholder="예: 생산직")
     
     st.markdown("---")
-    st.markdown("### 📊 9원 성향별 점수 입력 (0~20점)")
-    st.caption("※ 각 유형별 점수를 입력하면 두 번째 참고 이미지처럼 다각형 형태의 방사형 도표로 시각화됩니다.")
+    st.markdown("### 📊 성향별 점수 입력 (0~20점)")
+    st.caption("※ 각 유형별 점수를 입력하면 방사형 도표로 시각화되며, 에니어그램 기질 분석이 함께 도출됩니다.")
     
     col_e1, col_e2, col_e3 = st.columns(3)
     with col_e1:
@@ -86,23 +86,18 @@ def clean_markdown_text(text):
     text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
     return text
 
-# 3. [신규 구현] 두 번째 참고 이미지 형태의 9각형 방사형 점수 가시화 도표 생성 함수
+# 3. 방사형(다각형) 점수 가시화 도표 생성 함수 (두 번째 참고 이미지 스타일 유지)
 def create_radar_polygon_drawing(scores):
-    # Drawing 크기 설정 (폭 535, 높이 190)
     d = Drawing(535, 190)
     d.add(Rect(0, 0, 535, 190, fillColor=colors.HexColor('#F8FAFC'), strokeColor=colors.HexColor('#CBD5E1'), strokeWidth=0.8, rx=6, ry=6))
     
-    # 상단 타이틀 및 범례 표시
-    d.add(String(15, 172, "9원 성향별 점수 분포 방사형 가시화 도표", fontName='NanumGothicBold', fontSize=10, fillColor=colors.HexColor('#1E293B')))
+    d.add(String(15, 172, "성향별 점수 분포 방사형 가시화 도표", fontName='NanumGothicBold', fontSize=10, fillColor=colors.HexColor('#1E293B')))
     
-    # 범례 박스 (핑크색 선/영역 표시)
     d.add(Rect(415, 170, 12, 8, fillColor=colors.HexColor('#F43F5E'), strokeColor=colors.HexColor('#E11D48'), rx=2, ry=2))
     d.add(String(432, 171, "성향 선호도 점수", fontName='NanumGothic', fontSize=8, fillColor=colors.HexColor('#334155')))
     
-    # 레이더 차트 중심 및 최대 반지름
     cx, cy, max_r = 267.5, 95, 65
     
-    # 배경 동심원 눈금 (4단계: 5, 10, 15, 20점 기준)
     levels = [0.25, 0.5, 0.75, 1.0]
     level_scores = [5, 10, 15, 20]
     
@@ -110,42 +105,32 @@ def create_radar_polygon_drawing(scores):
         r = max_r * lvl
         poly_points = []
         for i in range(9):
-            # 1유형이 상단(90도)에서 시계방향으로 40도씩 배치 (360 / 9 = 40)
             angle = math.radians(90 - i * 40)
             x = cx + r * math.cos(angle)
             y = cy + r * math.sin(angle)
             poly_points.append((x, y))
         
-        # 다각형 선 그리기
         flat_pts = [coord for pt in poly_points for coord in pt]
         d.add(Polygon(flat_pts, fillColor=None, strokeColor=colors.HexColor('#E2E8F0'), strokeWidth=0.7))
         
-        # 눈금 숫자 표시 (첫 번째 축 기준)
         if idx < 3:
             d.add(String(cx + 3, cy + r - 8, f"{level_scores[idx]}", fontName='NanumGothic', fontSize=6, fillColor=colors.HexColor('#94A3B8')))
 
-    # 방사형 축(Axis) 및 라벨 그리기
     labels = ["1. 완벽/원칙", "2. 조력/공감", "3. 성취/목표", "4. 독창/예술", "5. 탐구/분석", "6. 책임/안정", "7. 열정/비전", "8. 도전/결단", "9. 조화/수용"]
-    axis_endpoints = []
     
     for i in range(9):
         angle = math.radians(90 - i * 40)
         ex = cx + max_r * math.cos(angle)
         ey = cy + max_r * math.sin(angle)
-        axis_endpoints.append((ex, ey))
         
-        # 중심에서 축 끝까지 선
         d.add(Line(cx, cy, ex, ey, strokeColor=colors.HexColor('#CBD5E1'), strokeWidth=0.6))
         
-        # 라벨 위치 조정 (텍스트가 잘리지 않도록 방향별 미세 조정)
         label_r = max_r + 16
         lx = cx + label_r * math.cos(angle)
         ly = cy + label_r * math.sin(angle)
         
-        # 텍스트 정렬 보정
         d.add(String(lx, ly - 3, labels[i], fontName='NanumGothicBold', fontSize=7.5, fillColor=colors.HexColor('#1E293B')))
 
-    # 사용자 실제 점수 다각형 연결선 생성 (0~20점 스케일)
     user_poly_points = []
     for i, s in enumerate(scores):
         ratio = max(0.0, min(float(s), 20.0)) / 20.0
@@ -155,10 +140,8 @@ def create_radar_polygon_drawing(scores):
         uy = cy + r * math.sin(angle)
         user_poly_points.append((ux, uy))
         
-        # 각 점 위치에 작은 원 표시
         d.add(Circle(ux, uy, 3, fillColor=colors.HexColor('#F43F5E'), strokeColor=colors.white, strokeWidth=0.8))
 
-    # 사용자 점수 영역 채우기 및 외곽선 (두 번째 참고 이미지의 핑크색 영역 스타일)
     user_flat_pts = [coord for pt in user_poly_points for coord in pt]
     d.add(Polygon(user_flat_pts, fillColor=colors.HexColor('#FDA4AF'), strokeColor=colors.HexColor('#F43F5E'), strokeWidth=1.5, strokeOpacity=0.8, fillOpacity=0.35))
     
@@ -190,18 +173,18 @@ def create_pdf(text_page1, text_page2, user_name, motiv_scores):
     story = []
     
     # -------------------------------------------------------------------------
-    # [PAGE 1] 점수별 방사형 가시화 도표 및 심리 동기 진단 결과
+    # [PAGE 1] 방사형 가시화 도표 및 에니어그램 심리 분석 결과
     # -------------------------------------------------------------------------
     banner1 = Table([[Paragraph(f"<b>EXECUTIVE INTELLIGENCE REPORT (1/2) &nbsp;|&nbsp; {user_name}</b>", title_style)]], colWidths=[535], rowHeights=[20])
     banner1.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#0F172A')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,-1), 'CENTER')]))
     story.append(banner1)
     story.append(Spacer(1, 4))
     
-    # 방사형 점수 가시화 도표 추가 (참고 이미지 스타일)
+    # 방사형 점수 가시화 도표 추가
     story.append(create_radar_polygon_drawing(motiv_scores))
     story.append(Spacer(1, 4))
     
-    comment_text = "<b>[전문가 진단 코멘트]:</b> 상단 방사형 가시화 도표는 9가지 성향별 선호도와 점수 분포를 입체적으로 보여줍니다. 특정 영역으로 치우치거나 균형 잡힌 패턴을 바탕으로 개인의 강점과 잠재력을 다각도로 분석할 수 있습니다."
+    comment_text = "<b>[전문가 진단 코멘트]:</b> 상단 방사형 가시화 도표는 9가지 기질 유형별 선호도 점수를 보여줍니다. 이를 바탕으로 도출된 에니어그램 심층 특성과 행동 패턴을 아래 분석에서 상세히 확인하실 수 있습니다."
     comment_table = Table([[Paragraph(comment_text, comment_style)]], colWidths=[535])
     comment_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#EFF6FF')),
@@ -307,22 +290,22 @@ if submitted:
     if not name: 
         st.warning("성명을 입력해주세요.")
     else:
-        with st.spinner("💎 9원 성향 점수 방사형 가시화 도표와 상세 전략이 포함된 프리미엄 보고서를 생성 중입니다..."):
+        with st.spinner("💎 방사형 가시화 도표와 에니어그램 심층 분석 보고서를 생성 중입니다..."):
             client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
             
             system_prompt = """
-            # ROLE: 글로벌 최고 경영 컨설턴트 및 프리미엄 조직 심리 전략가
+            # ROLE: 글로벌 최고 경영 컨설턴트 및 에니어그램 심리 전략 전문가
             # RULES & CONSTRAINTS:
-            1. 절대 금지 사항: 특정 진단 검사 명칭('사주', '명리', '별자리', 'MBTI', '에니어그램' 등) 직접 언급 금지. 전문 비즈니스 및 조직 심리 용어만 사용.
+            1. 에니어그램(Enneagram) 기반 분석 내용(9가지 기질 유형별 핵심 동기, 스트레스 분열/통합 방향성 등)을 반드시 포함하여 상세히 기술할 것.
             2. 내용 풍성화 및 상세화: 빈칸과 여백이 남지 않도록 모든 항목별로 매우 상세하고 깊이 있는 문장으로 가득 채워 작성할 것.
             3. 마스터플랜 다양화: [인지/사유 고도화], [소통/관계 협업], [실무 실행력 강화], [자기관리/스트레스 루틴] 등 다채로운 영역으로 구체화할 것.
             4. 출력 형식: 반드시 아래의 구분자(`---PAGE_SPLIT---`)를 기준으로 페이지 1과 페이지 2 내용으로 나누어 출력할 것.
             
             # OUTPUT FORMAT:
-            ## 심리 동기 및 행동 패턴 심층 분석
-            - **고유 에너지 원천과 동기 구조**: (최소 4~5문장 이상으로 매우 상세하고 입체적으로 기술)
-            - **성격적 강점과 현업 업무 스타일**: (최소 4~5문장 이상으로 구체적인 업무 상황과 연계하여 기술)
-            - **무의식적 스트레스 요인 및 대응 메커니즘**: (구체적인 스트레스 유발 상황과 심리적 방어 기제 분석을 상세히 기술)
+            ## 에니어그램 기반 심리 동기 및 행동 패턴 심층 분석
+            - **핵심 에니어그램 기질과 동기 구조**: (최소 4~5문장 이상으로 에니어그램 유형 특성과 동기 구조를 상세히 기술)
+            - **성격적 강점과 현업 업무 스타일**: (에니어그램 특성에 기반한 강점과 구체적인 업무 상황 연계 기술)
+            - **무의식적 스트레스 요인 및 분열/통합 메커니즘**: (에니어그램 스트레스 분열 방향과 안정 시 통합 방향성을 상세히 분석)
             
             ## 직무 적합도 및 핵심 역량 정밀 진단
             - **강점 극대화 영역 및 발휘 시나리오**: (실무 현장에서의 구체적 성과 창출 시나리오를 상세히 기술)
@@ -362,18 +345,18 @@ if submitted:
                 page1_text = parts[0]
                 page2_text = "## 역량 다각화" + parts[1] if len(parts) > 1 else raw_content
             
-            st.success("💎 9원 성향 점수 방사형 도표가 포함된 프리미엄 보고서가 완성되었습니다.")
+            st.success("💎 방사형 가시화 도표와 에니어그램 분석이 포함된 프리미엄 보고서가 완성되었습니다.")
             
             # 웹 화면 출력
             st.markdown("<div class='report-box'>", unsafe_allow_html=True)
-            st.markdown("### [PAGE 1] 9원 성향 방사형 점수 가시화 및 심리 진단 결과")
+            st.markdown("### [PAGE 1] 방사형 점수 가시화 및 에니어그램 심리 진단 결과")
             st.markdown(page1_text)
             st.markdown("---")
             st.markdown("### [PAGE 2] 인문교양·토론 및 마스터 액션 플랜")
             st.markdown(page2_text)
             st.markdown("</div>", unsafe_allow_html=True)
             
-            # PDF 다운로드 버튼 (9가지 점수를 모두 전달)
+            # PDF 다운로드 버튼
             pdf_file = create_pdf(page1_text, page2_text, name, [e1, e2, e3, e4, e5, e6, e7, e8, e9])
             with open(pdf_file, "rb") as f:
                 st.download_button("📕 프리미엄 PDF 보고서 다운로드", data=f, file_name=pdf_file, mime="application/pdf", use_container_width=True)
