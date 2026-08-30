@@ -10,6 +10,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import os
 import datetime
+import re
 
 # 1. 페이지 설정 및 UI 스타일
 st.set_page_config(page_title="Executive Intelligence Report", page_icon="💼", layout="wide")
@@ -23,6 +24,10 @@ st.markdown("""
         font-weight: 600; border: none; padding: 0.6rem 1.2rem;
     }
     .stButton>button:hover { background-color: #1F385C; }
+    .report-box {
+        background-color: white; padding: 30px; border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -33,7 +38,7 @@ with st.form("user_input_form"):
     st.markdown("### 👤 기본 프로필 및 심리 성향 진단")
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1: 
-        name = st.text_input("성명", placeholder="예: 홍길동")
+        name = st.text_input("성명", placeholder="예: 김도영")
     with col2: 
         birth = st.date_input(
             "생년월일", 
@@ -53,7 +58,7 @@ with st.form("user_input_form"):
     with col4: 
         mbti = st.selectbox("MBTI", mbti_list)
     with col5: 
-        job = st.text_input("직무 / 전공", placeholder="예: 데이터전문가")
+        job = st.text_input("직무 / 전공", placeholder="예: 생산직")
     
     st.markdown("---")
     st.markdown("### 📊 다차원 내면 동기 척도 (0~20점)")
@@ -75,7 +80,13 @@ with st.form("user_input_form"):
 
     submitted = st.form_submit_button("A4 2페이지 분량 종합 평가 보고서 생성", use_container_width=True)
 
-# 3. ReportLab 자체 도형 생성 함수 (나눔고딕 폰트 적용)
+# 별표(**) 기호를 깔끔한 HTML 태그로 변환하는 함수
+def clean_markdown_text(text):
+    # **제목**: 내용 형태를 <b>제목</b>: 내용으로 변환
+    text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+    return text
+
+# 3. ReportLab 자체 도형 생성 함수
 def create_bar_drawing(title, categories, scores, max_val=100):
     d = Drawing(250, 145)
     d.add(Rect(0, 0, 250, 145, fillColor=colors.HexColor('#F8FAFC'), strokeColor=colors.HexColor('#B4C6E7'), strokeWidth=0.5, rx=5, ry=5))
@@ -93,7 +104,7 @@ def create_bar_drawing(title, categories, scores, max_val=100):
         y -= 20
     return d
 
-# 4. PDF 생성 (텍스트 밀착 및 폰트 최적화 레이아웃)
+# 4. PDF 생성 함수
 def create_pdf(text, user_name, motiv_scores, big5_scores, sw_scores):
     filename = f"{user_name}_Assessment_Report.pdf"
     doc = SimpleDocTemplate(filename, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=25, bottomMargin=25)
@@ -147,7 +158,7 @@ def create_pdf(text, user_name, motiv_scores, big5_scores, sw_scores):
         if line.startswith('|'):
             if '---' in line: continue
             cols = [c.strip() for c in line.split('|')[1:-1]]
-            row_cells = [Paragraph(f"<b>{col}</b>", th_style) if len(table_data) == 0 else Paragraph(col, td_style) for col in cols]
+            row_cells = [Paragraph(clean_markdown_text(col), th_style) if len(table_data) == 0 else Paragraph(clean_markdown_text(col), td_style) for col in cols]
             table_data.append(row_cells)
             continue
         
@@ -172,12 +183,13 @@ def create_pdf(text, user_name, motiv_scores, big5_scores, sw_scores):
             story.append(sec_banner)
             story.append(Spacer(1, 4))
         elif line.startswith('### '): 
-            story.append(Paragraph(line[4:], sub_style))
+            story.append(Paragraph(clean_markdown_text(line[4:]), sub_style))
         elif line.startswith('- '): 
-            story.append(Paragraph(f"• {line[2:]}", body_style))
+            cleaned_line = clean_markdown_text(line[2:])
+            story.append(Paragraph(f"• {cleaned_line}", body_style))
             story.append(Spacer(1, 2))
         else: 
-            story.append(Paragraph(line, body_style))
+            story.append(Paragraph(clean_markdown_text(line), body_style))
             story.append(Spacer(1, 2))
             
     if table_data:
@@ -188,7 +200,7 @@ def create_pdf(text, user_name, motiv_scores, big5_scores, sw_scores):
     doc.build(story)
     return filename
 
-# 5. AI 실행 및 출력
+# 5. AI 실행 및 화면(웹사이트) 출력
 if submitted:
     if not name: 
         st.warning("성명을 입력해주세요.")
@@ -196,7 +208,6 @@ if submitted:
         with st.spinner("대상자의 MBTI 및 심층 데이터를 복합 분석하여 종합 리포트와 지표를 구성 중입니다... (약 20~30초 소요)"):
             client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
             
-            # 프롬프트 내 가이드 서식 유출 방지 및 깔끔한 출력 강화
             system_prompt = """
             # ROLE: 글로벌 수석 커리어 컨설턴트 및 조직 심리 전략가
             # RULES:
@@ -206,8 +217,7 @@ if submitted:
                - 두 번째 줄: 직무 역량 점수 5개 (기획분석, 추진리더십, 협업소통, 창의문제해결, 위기관리 / 0~100점)
                를 각각 쉼표로 구분하여 숫자만 작성할 것. (예: 65,80,75,45,70 / 85,65,80,70,45)
             3. 금지어 철저 준수: 리포트 본문 내에서 '사주', '명리', '별자리' 등 출처를 유추할 수 있는 키워드는 절대 언급 금지. 완벽한 비즈니스 진단 보고서 톤 유지.
-            4. 불필요한 레이블이나 플레이스홀더 문구(예: "** 내용 **" 등)를 절대 출력하지 말고 곧바로 본문 내용을 작성할 것.
-            5. 아래 OUTPUT FORMAT의 마크다운(##) 구조를 정확히 준수할 것.
+            4. 아래 OUTPUT FORMAT의 마크다운(##) 구조를 정확히 준수할 것.
             
             # OUTPUT FORMAT:
             65,80,75,45,70
@@ -255,8 +265,23 @@ if submitted:
                 sw_scores = [80, 70, 75, 65, 60]
                 report_content = raw_response
             
-            st.success("✅ 불필요한 문구가 제거되고 정돈된 A4 2페이지 분량의 심층 보고서가 생성되었습니다.")
+            st.success("✅ 불필요한 별표 기호가 제거되고 웹사이트 및 PDF에 동일하게 반영되었습니다.")
             
+            # 웹 화면에 동일한 결과 출력 (별표 기호를 HTML 태그로 깔끔하게 치환하여 노출)
+            st.markdown("<div class='report-box'>", unsafe_allow_html=True)
+            for line in report_content.split('\n'):
+                line = line.strip()
+                if not line: continue
+                if line.startswith('## '):
+                    st.markdown(f"### {line[3:]}")
+                elif line.startswith('- '):
+                    clean_txt = clean_markdown_text(line[2:])
+                    st.markdown(f"- {clean_txt}")
+                else:
+                    st.markdown(clean_markdown_text(line))
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # PDF 파일 생성 및 다운로드 버튼 제공
             pdf_file = create_pdf(report_content, name, [e1, e2, e3, e4, e5, e6, e7, e8, e9], big5_scores, sw_scores)
             with open(pdf_file, "rb") as f:
                 st.download_button("📕 신용평가형 2Page PDF 보고서 다운로드", data=f, file_name=pdf_file, mime="application/pdf", use_container_width=True)
