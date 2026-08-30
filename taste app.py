@@ -28,32 +28,32 @@ st.markdown("""
 
 st.markdown("<h1 style='text-align: center; color: #2B4C7E; background-color:#E9EEF5; padding:20px; border-radius:8px;'>심층 역량 및 직무 적합도 평가 보고서</h1>", unsafe_allow_html=True)
 
-# 2. 사용자 입력 폼 (전문적인 비즈니스 용어로 통일, 도표 3 입력 제거)
+# 2. 사용자 입력 폼 (별자리 입력 제거, 생년월일로 자동 유추)
 with st.form("user_input_form"):
     st.markdown("### 👤 기본 프로필 및 심리 성향 진단")
     col1, col2, col3, col4 = st.columns(4)
     with col1: name = st.text_input("성명", placeholder="예: 주진희")
-    with col2: birth = st.date_input("생년월일 (기질 분석 기준)", value=datetime.date(1990, 1, 1))
-    with col3: sign_type = st.text_input("소속 성향 유형", placeholder="예: 비전 지향형 / 전략가형")
+    with col2: birth = st.date_input("생년월일 (기질 및 별자리 자동 유추 기준)", value=datetime.date(1990, 1, 1))
+    with col3: blood_type = st.selectbox("혈액형", ["A형", "B형", "O형", "AB형"])
     with col4: job = st.text_input("직무 / 전공", placeholder="예: 데이터 분석가")
     
     st.markdown("---")
     st.markdown("### 📊 다차원 내면 동기 척도 (0~20점)")
-    st.caption("※ 도표 2(성격 5요인) 및 도표 3(직무 핵심 역량)은 입력된 프로필과 내면 동기 척도를 기반으로 AI가 자동 유추·도출합니다.")
+    st.caption("※ 성격 5요인 및 직무 핵심 역량 지표는 입력된 프로필과 내면 동기 척도를 기반으로 AI가 자동 유추·도출합니다.")
     
     col_e1, col_e2, col_e3 = st.columns(3)
     with col_e1:
-        e1 = st.number_input("1번-완벽성 및 원칙 지향", 0, 20, 15)
-        e4 = st.number_input("4번-독창성 및 표현 지향", 0, 20, 12)
-        e7 = st.number_input("7번-열정 및 비전 지향", 0, 20, 10)
+        e1 = st.number_input("완벽성 및 원칙 지향", 0, 20, 15)
+        e4 = st.number_input("독창성 및 표현 지향", 0, 20, 12)
+        e7 = st.number_input("열정 및 비전 지향", 0, 20, 10)
     with col_e2:
-        e2 = st.number_input("2번-조력 및 공감 지향", 0, 20, 14)
-        e5 = st.number_input("5번-탐구 및 분석 지향", 0, 20, 18)
-        e8 = st.number_input("8번-도전 및 결단 지향", 0, 20, 11)
+        e2 = st.number_input("조력 및 공감 지향", 0, 20, 14)
+        e5 = st.number_input("탐구 및 분석 지향", 0, 20, 18)
+        e8 = st.number_input("도전 및 결단 지향", 0, 20, 11)
     with col_e3:
-        e3 = st.number_input("3번-성취 및 목표 지향", 0, 20, 16)
-        e6 = st.number_input("6번-책임 및 안정 지향", 0, 20, 13)
-        e9 = st.number_input("9번-조화 및 수용 지향", 0, 20, 9)
+        e3 = st.number_input("성취 및 목표 지향", 0, 20, 16)
+        e6 = st.number_input("책임 및 안정 지향", 0, 20, 13)
+        e9 = st.number_input("조화 및 수용 지향", 0, 20, 9)
 
     submitted = st.form_submit_button("A4 2페이지 분량 종합 평가 보고서 생성", use_container_width=True)
 
@@ -168,7 +168,7 @@ if submitted:
             # ROLE: 글로벌 수석 커리어 컨설턴트 및 조직 심리 전략가
             # RULES:
             1. 분량 규정: 반드시 A4 2페이지 분량이 꽉 찰 수 있도록 각 하위 섹션마다 최소 500자 이상 구체적으로 작성할 것.
-            2. 데이터 자동 유추: 제공된 생년월일, 소속 성향 유형, 내면 동기 점수 9개를 복합 분석하여, 
+            2. 데이터 자동 유추: 제공된 생년월일(생일 월/일을 통해 별자리 및 기질 자동 유추)과 혈액형, 내면 동기 점수 9개를 복합 분석하여, 
                - 첫 번째 줄: 성격 5요인 점수 5개 (외향, 호감, 성실, 정서안정, 개방 / 0~100점)
                - 두 번째 줄: 직무 역량 점수 5개 (기획분석, 추진리더십, 협업소통, 창의문제해결, 위기관리 / 0~100점)
                를 각각 쉼표로 구분하여 숫자만 작성할 것. (예: 65,80,75,45,70 / 85,65,80,70,45)
@@ -201,12 +201,12 @@ if submitted:
             - **전문성 심화 교육 이수를 통한 통찰력 강화**: (필요성 설명)
             """
             
-            user_data = f"- 이름: {name}, 직무: {job}\n- 생년월일: {birth}, 성향유형: {sign_type}\n- 내면동기척도: 완벽({e1}),조력({e2}),성취({e3}),독창({e4}),탐구({e5}),책임({e6}),열정({e7}),결단({e8}),조화({e9})"
+            user_data = f"- 이름: {name}, 직무: {job}\n- 생년월일: {birth}, 혈액형: {blood_type}\n- 내면동기척도: 완벽({e1}),조력({e2}),성취({e3}),독창({e4}),탐구({e5}),책임({e6}),열정({e7}),결단({e8}),조화({e9})"
             
             response = client.chat.completions.create(model="gpt-4o-mini", temperature=0.6, messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_data}])
             raw_response = response.choices[0].message.content.strip()
             
-            # 응답 데이터 파싱 (1행: Big5 점수, 2행: 직무역량 점수, 3행 이후: 리포트 텍스트)
+            # 응답 데이터 파싱
             lines = raw_response.split('\n')
             try:
                 big5_scores = [int(s.strip()) for s in lines[0].split(',')]
