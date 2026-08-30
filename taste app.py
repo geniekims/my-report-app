@@ -77,17 +77,17 @@ with st.form("user_input_form"):
     
     col_e1, col_e2, col_e3 = st.columns(3)
     with col_e1:
-        e1 = st.number_input("완벽성 및 원칙 지향", 0, 20, 15)
-        e4 = st.number_input("독창성 및 표현 지향", 0, 20, 12)
-        e7 = st.number_input("열정 및 비전 지향", 0, 20, 10)
+        e1 = st.number_input("1-완벽성 및 원칙 지향", 0, 20, 15)
+        e4 = st.number_input("4-독창성 및 표현 지향", 0, 20, 12)
+        e7 = st.number_input("7-열정 및 비전 지향", 0, 20, 10)
     with col_e2:
-        e2 = st.number_input("조력 및 공감 지향", 0, 20, 14)
-        e5 = st.number_input("탐구 및 분석 지향", 0, 20, 18)
-        e8 = st.number_input("도전 및 결단 지향", 0, 20, 11)
+        e2 = st.number_input("2-조력 및 공감 지향", 0, 20, 14)
+        e5 = st.number_input("5-탐구 및 분석 지향", 0, 20, 18)
+        e8 = st.number_input("8-도전 및 결단 지향", 0, 20, 11)
     with col_e3:
-        e3 = st.number_input("성취 및 목표 지향", 0, 20, 16)
-        e6 = st.number_input("책임 및 안정 지향", 0, 20, 13)
-        e9 = st.number_input("조화 및 수용 지향", 0, 20, 9)
+        e3 = st.number_input("3-성취 및 목표 지향", 0, 20, 16)
+        e6 = st.number_input("6-책임 및 안정 지향", 0, 20, 13)
+        e9 = st.number_input("9-조화 및 수용 지향", 0, 20, 9)
 
     submitted = st.form_submit_button("프리미엄 종합 평가 보고서 생성", use_container_width=True)
 
