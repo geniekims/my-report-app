@@ -30,15 +30,15 @@ st.markdown("<h1 style='text-align: center; color: #2B4C7E; background-color:#E9
 
 # 2. 사용자 입력 폼
 with st.form("user_input_form"):
-    st.markdown("### 👤 기본 프로필")
+    st.markdown("### 👤 기본 프로필 (명리/별자리 분석 기반)")
     col1, col2, col3, col4 = st.columns(4)
     with col1: name = st.text_input("성명", placeholder="예: 주진희")
-    with col2: birth = st.date_input("생년월일", value=datetime.date(1990, 1, 1))
-    with col3: gender = st.radio("성별", ["남성", "여성"])
+    with col2: birth = st.date_input("생년월일 (사주 베이스)", value=datetime.date(1990, 1, 1))
+    with col3: zodiac = st.text_input("별자리", placeholder="예: 황소자리")
     with col4: job = st.text_input("직무/전공", placeholder="예: 데이터 분석가")
     
     st.markdown("---")
-    st.markdown("### 📊 [도표 1] 다차원 성향 척도 (에니어그램)")
+    st.markdown("### 📊 [도표 1] 다차원 성향 척도 (0~20점)")
     col_e1, col_e2, col_e3 = st.columns(3)
     with col_e1:
         e1 = st.number_input("1번 (완벽/원칙)", 0, 20, 15)
@@ -54,16 +54,8 @@ with st.form("user_input_form"):
         e9 = st.number_input("9번 (평화/수용)", 0, 20, 9)
 
     st.markdown("---")
-    st.markdown("### 📈 [도표 2] 직업선호도 L형 성격 5요인 (0~100점)")
-    col_b1, col_b2, col_b3, col_b4, col_b5 = st.columns(5)
-    with col_b1: b_ext = st.slider("외향성", 0, 100, 60)
-    with col_b2: b_agr = st.slider("호감성", 0, 100, 75)
-    with col_b3: b_con = st.slider("성실성", 0, 100, 85)
-    with col_b4: b_neu = st.slider("정서적 불안정성", 0, 100, 40)
-    with col_b5: b_ope = st.slider("경험 개방성", 0, 100, 70)
-
-    st.markdown("---")
-    st.markdown("### 📉 [도표 3] 직무 핵심 역량 (강점 및 단점 / 0~100점)")
+    st.markdown("### 📉 [도표 3] 직무 핵심 역량 강약점 (0~100점)")
+    st.caption("※ 도표 2(직업선호도 L형 성격)는 입력된 생년월일, 별자리, 성향 척도를 AI가 종합 분석하여 자동으로 도출합니다.")
     col_c1, col_c2, col_c3, col_c4, col_c5 = st.columns(5)
     with col_c1: c_ana = st.slider("기획 및 분석력", 0, 100, 85)
     with col_c2: c_lea = st.slider("추진력 및 리더십", 0, 100, 65)
@@ -84,14 +76,14 @@ def create_big5_chart(scores, save_path):
     traits = ['외향성', '호감성', '성실성', '불안정성', '경험개방성']
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=scores, y=traits, mode='lines+markers', marker=dict(size=12, color='#1F385C'), line=dict(color='#4A70B0', width=3)))
-    fig.update_layout(xaxis=dict(range=[0, 100], title="T-Score"), title=dict(text="L형 성격 5요인 프로파일", font=dict(size=14, color="#2B4C7E")), margin=dict(l=80, r=20, t=40, b=30), paper_bgcolor='white')
+    fig.update_layout(xaxis=dict(range=[0, 100], title="T-Score"), title=dict(text="L형 성격 5요인 (AI 종합 도출)", font=dict(size=14, color="#2B4C7E")), margin=dict(l=80, r=20, t=40, b=30), paper_bgcolor='white')
     fig.write_image(save_path, width=400, height=300, scale=2)
 
 def create_sw_chart(scores, save_path):
     categories = ['분석력', '추진력', '협업능력', '창의성', '위기관리']
-    colors = ['#2B4C7E' if s >= 60 else '#D9534F' for s in scores] # 60 미만은 붉은색(약점)으로 표시
+    colors = ['#2B4C7E' if s >= 60 else '#D9534F' for s in scores]
     fig = go.Figure(data=[go.Bar(x=scores, y=categories, orientation='h', marker_color=colors)])
-    fig.update_layout(xaxis=dict(range=[0, 100]), title=dict(text="강점 및 약점 도표 (Blue:강점, Red:보완)", font=dict(size=14, color="#2B4C7E")), margin=dict(l=80, r=20, t=40, b=30), paper_bgcolor='white')
+    fig.update_layout(xaxis=dict(range=[0, 100]), title=dict(text="직무 역량 도표 (Blue:강점, Red:보완)", font=dict(size=14, color="#2B4C7E")), margin=dict(l=80, r=20, t=40, b=30), paper_bgcolor='white')
     fig.write_image(save_path, width=400, height=300, scale=2)
 
 # 4. PDF 생성 (A4 2페이지 레이아웃)
@@ -113,28 +105,24 @@ def create_pdf(text, user_name, chart1, chart2, chart3):
 
     story = []
     
-    # [1] 메인 타이틀
     main_banner = Table([[Paragraph(f"<b>심층 역량 및 직무 적합도 통합 평가 | {user_name}</b>", title_style)]], colWidths=[525], rowHeights=[40])
     main_banner.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#4A70B0')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,-1), 'CENTER')]))
     story.append(main_banner)
     story.append(Spacer(1, 15))
     
-    # [2] 3개의 도표를 그리드 형태로 배치
     chart_table = Table([
         [Image(chart1, width=255, height=190), Image(chart2, width=255, height=190)],
-        [Image(chart3, width=255, height=190), Paragraph("<b>[도표 종합 분석 코멘트]</b><br/><br/>좌측 도표들은 평가 대상자의 내면적 동기(에니어그램), L형 성격 5요인(Big 5), 그리고 직무 수행에 필요한 핵심 역량의 강약점을 시각화한 결과입니다.<br/><br/>푸른색 그래프는 조직 내에서 즉시 발휘될 수 있는 <b>핵심 강점(우량/양호)</b>을 의미하며, 붉은색으로 표시된 역량 영역은 지속적인 모니터링 및 <b>리스크 관리(미흡)</b>가 필요한 영역을 나타냅니다.", body_style)]
+        [Image(chart3, width=255, height=190), Paragraph("<b>[도표 종합 분석 코멘트]</b><br/><br/>본 평가의 분석 모델은 대상자의 내면적 동기, 생년월일 기반의 기질적 특성, 그리고 현재 발현되고 있는 직무 핵심 역량을 입체적으로 융합하여 도출되었습니다.<br/><br/>푸른색 그래프는 조직 내에서 즉시 발휘될 수 있는 <b>핵심 강점</b>을 의미하며, 붉은색으로 표시된 역량 영역은 지속적인 모니터링 및 <b>리스크 관리</b>가 필요한 영역을 나타냅니다.", body_style)]
     ], colWidths=[262.5, 262.5])
     chart_table.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('BOTTOMPADDING', (0,0), (-1,-1), 15)]))
     story.append(chart_table)
     story.append(Spacer(1, 10))
 
-    # [3] AI 마크다운 텍스트 파싱 및 2페이지 강제 분할 로직
     table_data = []
     for line in text.split('\n'):
         line = line.strip()
         if not line: continue
         
-        # '심층 요약표' 또는 'Master Action Plan' 등장 시 두 번째 페이지로 넘김
         if line.startswith('## 심층 요약표') or line.startswith('## Master Action Plan'):
             story.append(PageBreak()) 
             
@@ -181,24 +169,20 @@ def create_pdf(text, user_name, chart1, chart2, chart3):
 if submitted:
     if not name: st.warning("성명을 입력해주세요.")
     else:
-        with st.spinner("다차원 데이터를 정밀 분석하여 A4 2페이지 분량의 심층 리포트를 작성하고 있습니다... (약 20~30초 소요)"):
+        with st.spinner("사주, 별자리, 성향 데이터를 복합 분석하여 L형 성격 요인을 도출하고 보고서를 작성 중입니다... (약 20~30초 소요)"):
             client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
             
-            # 차트 이미지 생성
-            chart1_path, chart2_path, chart3_path = "c1.png", "c2.png", "c3.png"
-            create_radar_chart([e1, e2, e3, e4, e5, e6, e7, e8, e9], chart1_path)
-            create_big5_chart([b_ext, b_agr, b_con, b_neu, b_ope], chart2_path)
-            create_sw_chart([c_ana, c_lea, c_com, c_cre, c_det], chart3_path)
-            
             system_prompt = """
-            # ROLE: 글로벌 수석 커리어 컨설턴트 및 조직 심리 전략가
+            # ROLE: 글로벌 수석 커리어 컨설턴트 및 명리학/조직 심리 전략가
             # RULES:
-            1. 분량 규정: 반드시 A4 2페이지 분량이 꽉 찰 수 있도록, 각 하위 섹션마다 최소 500자 이상, 매우 구체적인 예시와 행동 지침을 포함하여 '대폭 늘려서' 작성할 것. (총 2500자 이상)
-            2. '사주', '에니어그램', '별자리', '혈액형' 단어 사용 금지.
-            3. '인문학', '고전' 단어는 1~4번 섹션에서 금지.
-            4. 각 섹션 대제목은 아래 OUTPUT FORMAT의 마크다운(##)을 정확히 따를 것.
+            1. 분량 규정: 반드시 A4 2페이지 분량이 꽉 찰 수 있도록 각 하위 섹션마다 최소 500자 이상 구체적으로 작성할 것.
+            2. 데이터 융합 분석: 제공받은 사용자의 생년월일(사주 명리 기반 기질), 별자리, 다차원 성향(에니어그램)을 내부적으로 종합 분석하여, '직업선호도 L형 성격 5요인(외향성, 호감성, 성실성, 불안정성, 경험개방성)' 점수를 0~100점 사이로 자체 추론(도출)할 것.
+            3. 금지어: 리포트 본문 내에서는 '사주', '에니어그램', '별자리', '혈액형' 단어를 절대 직접 언급하지 말 것. (심리 평가 및 기질 분석을 진행한 것처럼 전문적인 비즈니스 용어로 치환)
+            4. ★매우 중요★: AI의 응답 가장 첫 번째 줄에는 반드시 AI가 도출해 낸 L형 성격 5요인 점수 5개를 쉼표(,)로 구분하여 숫자만 작성할 것. (예: 65, 80, 75, 45, 70)
+            5. 두 번째 줄부터 아래 OUTPUT FORMAT의 마크다운(##)을 정확히 따라 본격적인 보고서를 작성할 것.
             
-            # OUTPUT FORMAT (마크다운 엄수):
+            # OUTPUT FORMAT:
+            [첫 줄은 반드시 점수 5개 작성]
             ## 심리 동기 및 성격 5요인 분석
             - **에너지 원천과 행동 동기**: (매우 상세하게 3~4문장 이상)
             - **성격적 강점과 업무 스타일**: (매우 상세하게 3~4문장 이상)
@@ -222,12 +206,36 @@ if submitted:
             - **인문학 및 고전 교육 이수를 통한 멘탈리티 강화**: (통찰력 확장에 왜 필요한지 설명)
             """
             
-            user_data = f"- 이름: {name}, 직업: {job}\n- 척도1: {e1},{e2},{e3},{e4},{e5},{e6},{e7},{e8},{e9}\n- 척도2(Big5): 외향({b_ext}),호감({b_agr}),성실({b_con}),불안({b_neu}),개방({b_ope})\n- 척도3(역량): 분석({c_ana}),추진({c_lea}),소통({c_com}),창의({c_cre}),꼼꼼({c_det})"
+            user_data = f"- 이름: {name}, 직업: {job}\n- 생년월일(사주): {birth}, 별자리: {zodiac}\n- 다차원성향(에니어그램): 1번({e1}),2번({e2}),3번({e3}),4번({e4}),5번({e5}),6번({e6}),7번({e7}),8번({e8}),9번({e9})\n- 직무역량: 분석({c_ana}),추진({c_lea}),소통({c_com}),창의({c_cre}),꼼꼼({c_det})"
             
-            response = client.chat.completions.create(model="gpt-4o-mini", temperature=0.5, messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_data}])
-            report_content = response.choices[0].message.content
+            response = client.chat.completions.create(model="gpt-4o-mini", temperature=0.6, messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_data}])
+            raw_response = response.choices[0].message.content.strip()
+            
+            # 응답 텍스트 파싱: 첫 줄(AI가 도출한 Big 5 점수)과 나머지 보고서 분리
+            lines = raw_response.split('\n')
+            try:
+                big5_scores = [int(s.strip()) for s in lines[0].split(',')]
+                if len(big5_scores) == 5:
+                    b_ext, b_agr, b_con, b_neu, b_ope = big5_scores
+                    report_content = '\n'.join(lines[1:]).strip()
+                else:
+                    raise ValueError
+            except:
+                # 파싱 실패 시 기본값 세팅 및 텍스트 원복
+                b_ext, b_agr, b_con, b_neu, b_ope = [50, 50, 50, 50, 50]
+                report_content = raw_response
+            
+            # 차트 이미지 생성
+            chart1_path, chart2_path, chart3_path = "c1.png", "c2.png", "c3.png"
+            create_radar_chart([e1, e2, e3, e4, e5, e6, e7, e8, e9], chart1_path)
+            create_big5_chart([b_ext, b_agr, b_con, b_neu, b_ope], chart2_path)
+            create_sw_chart([c_ana, c_lea, c_com, c_cre, c_det], chart3_path)
             
             st.success("✅ A4 2페이지 분량의 심층 보고서가 성공적으로 생성되었습니다.")
+            
+            # 화면 출력용
+            with st.expander("생성된 보고서 텍스트 미리보기"):
+                st.markdown(report_content)
             
             pdf_file = create_pdf(report_content, name, chart1_path, chart2_path, chart3_path)
             with open(pdf_file, "rb") as f:
