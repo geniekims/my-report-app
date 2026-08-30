@@ -41,7 +41,7 @@ st.markdown("""
 st.markdown("""
     <div style='background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%); padding: 30px; border-radius: 12px; text-align: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
         <h1 style='color: white; margin-bottom: 10px; font-size: 28px;'>Executive Intelligence Report</h1>
-        <p style='color: #94A3B8; font-size: 15px; margin: 0;'>다차원 심리 기질 및 9원 성향 분석 전문 솔루션</p>
+        <p style='color: #94A3B8; font-size: 15px; margin: 0;'>9원 성향 점수별 방사형 가시화 솔루션</p>
     </div>
 """, unsafe_allow_html=True)
 
@@ -63,22 +63,22 @@ with st.form("user_input_form"):
         job = st.text_input("직무 / 전공", value="생산직", placeholder="예: 생산직")
     
     st.markdown("---")
-    st.markdown("### 📊 다차원 내면 동기 척도 (0~20점)")
-    st.caption("※ 성격 5요인 및 직무 핵심 역량 지표는 입력된 프로필과 내면 동기 척도를 기반으로 AI가 자동 유추·도출합니다.")
+    st.markdown("### 📊 9원 성향별 점수 입력 (0~20점)")
+    st.caption("※ 각 유형별 점수를 입력하면 두 번째 참고 이미지처럼 다각형 형태의 방사형 도표로 시각화됩니다.")
     
     col_e1, col_e2, col_e3 = st.columns(3)
     with col_e1:
-        e1 = st.number_input("완벽성 및 원칙 지향", 0, 20, 15)
-        e4 = st.number_input("독창성 및 표현 지향", 0, 20, 12)
-        e7 = st.number_input("열정 및 비전 지향", 0, 20, 10)
+        e1 = st.number_input("1유형 (완벽/원칙)", 0, 20, 15)
+        e4 = st.number_input("4유형 (독창/예술)", 0, 20, 12)
+        e7 = st.number_input("7유형 (열정/비전)", 0, 20, 10)
     with col_e2:
-        e2 = st.number_input("조력 및 공감 지향", 0, 20, 14)
-        e5 = st.number_input("탐구 및 분석 지향", 0, 20, 18)
-        e8 = st.number_input("도전 및 결단 지향", 0, 20, 11)
+        e2 = st.number_input("2유형 (조력/공감)", 0, 20, 14)
+        e5 = st.number_input("5유형 (탐구/분석)", 0, 20, 18)
+        e8 = st.number_input("8유형 (도전/결단)", 0, 20, 11)
     with col_e3:
-        e3 = st.number_input("성취 및 목표 지향", 0, 20, 16)
-        e6 = st.number_input("책임 및 안정 지향", 0, 20, 13)
-        e9 = st.number_input("조화 및 수용 지향", 0, 20, 9)
+        e3 = st.number_input("3유형 (성취/목표)", 0, 20, 16)
+        e6 = st.number_input("6유형 (책임/안정)", 0, 20, 13)
+        e9 = st.number_input("9유형 (조화/수용)", 0, 20, 9)
 
     submitted = st.form_submit_button("프리미엄 종합 평가 보고서 생성", use_container_width=True)
 
@@ -86,67 +86,85 @@ def clean_markdown_text(text):
     text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
     return text
 
-# 3. 9원 성향 분석 원형 다이어그램 생성 함수 (첫 번째 참고 이미지 구현)
-def create_enneagram_polygon_drawing():
-    d = Drawing(535, 140)
-    d.add(Rect(0, 0, 535, 140, fillColor=colors.HexColor('#F8FAFC'), strokeColor=colors.HexColor('#CBD5E1'), strokeWidth=0.8, rx=6, ry=6))
+# 3. [신규 구현] 두 번째 참고 이미지 형태의 9각형 방사형 점수 가시화 도표 생성 함수
+def create_radar_polygon_drawing(scores):
+    # Drawing 크기 설정 (폭 535, 높이 190)
+    d = Drawing(535, 190)
+    d.add(Rect(0, 0, 535, 190, fillColor=colors.HexColor('#F8FAFC'), strokeColor=colors.HexColor('#CBD5E1'), strokeWidth=0.8, rx=6, ry=6))
     
-    d.add(String(15, 122, "9원 성향 분석 모델 및 내면 연결 다이어그램", fontName='NanumGothicBold', fontSize=10, fillColor=colors.HexColor('#1E293B')))
+    # 상단 타이틀 및 범례 표시
+    d.add(String(15, 172, "9원 성향별 점수 분포 방사형 가시화 도표", fontName='NanumGothicBold', fontSize=10, fillColor=colors.HexColor('#1E293B')))
     
-    cx, cy, r = 435, 70, 52
-    d.add(Circle(cx, cy, r, fillColor=colors.HexColor('#FFFFFF'), strokeColor=colors.HexColor('#1E3A8A'), strokeWidth=1.5))
+    # 범례 박스 (핑크색 선/영역 표시)
+    d.add(Rect(415, 170, 12, 8, fillColor=colors.HexColor('#F43F5E'), strokeColor=colors.HexColor('#E11D48'), rx=2, ry=2))
+    d.add(String(432, 171, "성향 선호도 점수", fontName='NanumGothic', fontSize=8, fillColor=colors.HexColor('#334155')))
     
-    points = {}
-    for i in range(1, 10):
-        angle = math.radians(90 - (i - 1) * 40)
-        x = cx + r * math.cos(angle)
-        y = cy + r * math.sin(angle)
-        points[i] = (x, y)
-        d.add(Circle(x, y, 3.5, fillColor=colors.HexColor('#3B82F6'), strokeColor=colors.white, strokeWidth=0.5))
+    # 레이더 차트 중심 및 최대 반지름
+    cx, cy, max_r = 267.5, 95, 65
     
-    ennea_lines = [(1, 4), (4, 2), (2, 8), (8, 5), (5, 7), (7, 1), (3, 6), (6, 9), (9, 3)]
-    for p1, p2 in ennea_lines:
-        if p1 in points and p2 in points:
-            d.add(Line(points[p1][0], points[p1][1], points[p2][0], points[p2][1], strokeColor=colors.HexColor('#EF4444'), strokeWidth=0.9))
+    # 배경 동심원 눈금 (4단계: 5, 10, 15, 20점 기준)
+    levels = [0.25, 0.5, 0.75, 1.0]
+    level_scores = [5, 10, 15, 20]
+    
+    for idx, lvl in enumerate(levels):
+        r = max_r * lvl
+        poly_points = []
+        for i in range(9):
+            # 1유형이 상단(90도)에서 시계방향으로 40도씩 배치 (360 / 9 = 40)
+            angle = math.radians(90 - i * 40)
+            x = cx + r * math.cos(angle)
+            y = cy + r * math.sin(angle)
+            poly_points.append((x, y))
+        
+        # 다각형 선 그리기
+        flat_pts = [coord for pt in poly_points for coord in pt]
+        d.add(Polygon(flat_pts, fillColor=None, strokeColor=colors.HexColor('#E2E8F0'), strokeWidth=0.7))
+        
+        # 눈금 숫자 표시 (첫 번째 축 기준)
+        if idx < 3:
+            d.add(String(cx + 3, cy + r - 8, f"{level_scores[idx]}", fontName='NanumGothic', fontSize=6, fillColor=colors.HexColor('#94A3B8')))
 
-    d.add(String(20, 100, "• 본능 중심 유형 (1/8/9번): 완벽성, 도전, 평화 및 안정 지향 기질", fontName='NanumGothic', fontSize=8, fillColor=colors.HexColor('#334155')))
-    d.add(String(20, 82, "• 감정 중심 유형 (2/3/4번): 조력, 목표성취, 독창적 예술 지향 기질", fontName='NanumGothic', fontSize=8, fillColor=colors.HexColor('#334155')))
-    d.add(String(20, 64, "• 사고 중심 유형 (5/6/7번): 탐구분석, 성실책임, 열정모험 지향 기질", fontName='NanumGothic', fontSize=8, fillColor=colors.HexColor('#334155')))
-    d.add(String(20, 40, "※ 9원 성향 분석 모델은 고유의 행동 패턴과 스트레스 대응 및 성장 방향성을", fontName='NanumGothicBold', fontSize=7.5, fillColor=colors.HexColor('#1E3A8A')))
-    d.add(String(20, 26, "   동시에 분석하여 입체적인 행동 패턴 예측과 자기 성찰 가이드를 제공합니다.", fontName='NanumGothic', fontSize=7.5, fillColor=colors.HexColor('#64748B')))
+    # 방사형 축(Axis) 및 라벨 그리기
+    labels = ["1. 완벽/원칙", "2. 조력/공감", "3. 성취/목표", "4. 독창/예술", "5. 탐구/분석", "6. 책임/안정", "7. 열정/비전", "8. 도전/결단", "9. 조화/수용"]
+    axis_endpoints = []
+    
+    for i in range(9):
+        angle = math.radians(90 - i * 40)
+        ex = cx + max_r * math.cos(angle)
+        ey = cy + max_r * math.sin(angle)
+        axis_endpoints.append((ex, ey))
+        
+        # 중심에서 축 끝까지 선
+        d.add(Line(cx, cy, ex, ey, strokeColor=colors.HexColor('#CBD5E1'), strokeWidth=0.6))
+        
+        # 라벨 위치 조정 (텍스트가 잘리지 않도록 방향별 미세 조정)
+        label_r = max_r + 16
+        lx = cx + label_r * math.cos(angle)
+        ly = cy + label_r * math.sin(angle)
+        
+        # 텍스트 정렬 보정
+        d.add(String(lx, ly - 3, labels[i], fontName='NanumGothicBold', fontSize=7.5, fillColor=colors.HexColor('#1E293B')))
+
+    # 사용자 실제 점수 다각형 연결선 생성 (0~20점 스케일)
+    user_poly_points = []
+    for i, s in enumerate(scores):
+        ratio = max(0.0, min(float(s), 20.0)) / 20.0
+        r = max_r * ratio
+        angle = math.radians(90 - i * 40)
+        ux = cx + r * math.cos(angle)
+        uy = cy + r * math.sin(angle)
+        user_poly_points.append((ux, uy))
+        
+        # 각 점 위치에 작은 원 표시
+        d.add(Circle(ux, uy, 3, fillColor=colors.HexColor('#F43F5E'), strokeColor=colors.white, strokeWidth=0.8))
+
+    # 사용자 점수 영역 채우기 및 외곽선 (두 번째 참고 이미지의 핑크색 영역 스타일)
+    user_flat_pts = [coord for pt in user_poly_points for coord in pt]
+    d.add(Polygon(user_flat_pts, fillColor=colors.HexColor('#FDA4AF'), strokeColor=colors.HexColor('#F43F5E'), strokeWidth=1.5, strokeOpacity=0.8, fillOpacity=0.35))
     
     return d
 
-# 4. 모던 게이지 바 도형 생성 함수
-def create_modern_gauge_drawing(title, definition, score, low_desc, high_desc):
-    d = Drawing(535, 46)
-    d.add(Rect(0, 0, 535, 46, fillColor=colors.HexColor('#F8FAFC'), strokeColor=colors.HexColor('#CBD5E1'), strokeWidth=0.8, rx=5, ry=5))
-    
-    d.add(String(12, 33, title, fontName='NanumGothicBold', fontSize=9, fillColor=colors.HexColor('#1E293B')))
-    d.add(String(135, 34, f"[{definition}]", fontName='NanumGothic', fontSize=7.5, fillColor=colors.HexColor('#64748B')))
-    
-    normalized_score = int((score / 20.0) * 100)
-    grade = "중간 (M)"
-    badge_color = colors.HexColor('#3B82F6')
-    if normalized_score <= 40:
-        grade = "낮음 (L)"
-        badge_color = colors.HexColor('#EF4444')
-    elif normalized_score >= 76:
-        grade = "높음 (H)"
-        badge_color = colors.HexColor('#10B981')
-
-    d.add(String(445, 33, f"환산점수: {normalized_score}점 [{grade}]", fontName='NanumGothicBold', fontSize=8, fillColor=badge_color))
-    
-    d.add(Rect(135, 15, 280, 6, fillColor=colors.HexColor('#E2E8F0'), strokeColor=None, rx=3, ry=3))
-    bar_w = (normalized_score / 100.0) * 280
-    d.add(Rect(135, 15, bar_w, 6, fillColor=badge_color, strokeColor=None, rx=3, ry=3))
-    
-    d.add(String(12, 5, f"• 낮음 특성: {low_desc}", fontName='NanumGothic', fontSize=6.8, fillColor=colors.HexColor('#64748B')))
-    d.add(String(300, 5, f"• 높음 특성: {high_desc}", fontName='NanumGothic', fontSize=6.8, fillColor=colors.HexColor('#64748B')))
-    
-    return d
-
-# 5. 2페이지 고정형 PDF 생성 함수
+# 4. 2페이지 고정형 PDF 생성 함수
 def create_pdf(text_page1, text_page2, user_name, motiv_scores):
     filename = f"{user_name}_Executive_Report.pdf"
     doc = SimpleDocTemplate(filename, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=20, bottomMargin=20)
@@ -172,38 +190,27 @@ def create_pdf(text_page1, text_page2, user_name, motiv_scores):
     story = []
     
     # -------------------------------------------------------------------------
-    # [PAGE 1] 9원 성향 분석 모델 및 내면 동기 진단 결과
+    # [PAGE 1] 점수별 방사형 가시화 도표 및 심리 동기 진단 결과
     # -------------------------------------------------------------------------
     banner1 = Table([[Paragraph(f"<b>EXECUTIVE INTELLIGENCE REPORT (1/2) &nbsp;|&nbsp; {user_name}</b>", title_style)]], colWidths=[535], rowHeights=[20])
     banner1.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#0F172A')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,-1), 'CENTER')]))
     story.append(banner1)
-    story.append(Spacer(1, 3))
+    story.append(Spacer(1, 4))
     
-    # 9원 성향 분석 원형 다이어그램 추가
-    story.append(create_enneagram_polygon_drawing())
-    story.append(Spacer(1, 2))
-
-    story.append(create_modern_gauge_drawing("1. 완벽성 및 원칙 지향", "규율 준수 및 세부 사항 통제", motiv_scores[0], "유연하나 실수가 잦음", "철저한 기준 준수, 정교함"))
-    story.append(Spacer(1, 1.5))
-    story.append(create_modern_gauge_drawing("2. 조력 및 공감 지향", "타인 감정 수용 및 협조 성향", motiv_scores[1], "독립적 선호, 타인 무관심", "뛰어난 공감, 화합 주도"))
-    story.append(Spacer(1, 1.5))
-    story.append(create_modern_gauge_drawing("3. 성취 및 목표 지향", "결과물 창출과 높은 성취 집념", motiv_scores[2], "안정 위주, 도전 의지 부족", "강한 목표 달성력, 추진력"))
-    story.append(Spacer(1, 1.5))
-    story.append(create_modern_gauge_drawing("4. 탐구 및 분석 지향", "원인 분석 및 지적 호기심의 깊이", motiv_scores[3], "표피적 이해에 머무름", "구조 분석 및 본질 통찰"))
-    story.append(Spacer(1, 1.5))
-    story.append(create_modern_gauge_drawing("5. 열정 및 비전 지향", "미래 가치 추구 및 변화 몰입도", motiv_scores[4], "현실 안주 성향", "혁신적 아이디어, 높은 몰입"))
-    story.append(Spacer(1, 2))
+    # 방사형 점수 가시화 도표 추가 (참고 이미지 스타일)
+    story.append(create_radar_polygon_drawing(motiv_scores))
+    story.append(Spacer(1, 4))
     
-    comment_text = "<b>[전문가 진단 코멘트]:</b> 9원 성향 분석 모델 및 5대 내면 동기 지표를 종합한 결과, 대상자는 원칙 준수와 분석적 사고에서 매우 높은 잠재력을 보유하고 있습니다. 스트레스 상황에서는 유연한 수용 태도를 활성화하여 안정적인 업무 수행력을 유지하는 것이 권장됩니다."
+    comment_text = "<b>[전문가 진단 코멘트]:</b> 상단 방사형 가시화 도표는 9가지 성향별 선호도와 점수 분포를 입체적으로 보여줍니다. 특정 영역으로 치우치거나 균형 잡힌 패턴을 바탕으로 개인의 강점과 잠재력을 다각도로 분석할 수 있습니다."
     comment_table = Table([[Paragraph(comment_text, comment_style)]], colWidths=[535])
     comment_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#EFF6FF')),
         ('BOX', (0,0), (-1,-1), 0.8, colors.HexColor('#BFDBFE')),
-        ('TOPPADDING', (0,0), (-1,-1), 2.5), ('BOTTOMPADDING', (0,0), (-1,-1), 2.5),
-        ('LEFTPADDING', (0,0), (-1,-1), 5), ('RIGHTPADDING', (0,0), (-1,-1), 5),
+        ('TOPPADDING', (0,0), (-1,-1), 3), ('BOTTOMPADDING', (0,0), (-1,-1), 3),
+        ('LEFTPADDING', (0,0), (-1,-1), 6), ('RIGHTPADDING', (0,0), (-1,-1), 6),
     ]))
     story.append(comment_table)
-    story.append(Spacer(1, 2))
+    story.append(Spacer(1, 3))
     
     for line in text_page1.split('\n'):
         line = line.strip()
@@ -295,12 +302,12 @@ def create_pdf(text_page1, text_page2, user_name, motiv_scores):
     doc.build(story)
     return filename
 
-# 6. AI 실행 및 화면 출력
+# 5. AI 실행 및 화면 출력
 if submitted:
     if not name: 
         st.warning("성명을 입력해주세요.")
     else:
-        with st.spinner("💎 9원 성향 분석 다이어그램과 상세 전략이 포함된 프리미엄 보고서를 생성 중입니다..."):
+        with st.spinner("💎 9원 성향 점수 방사형 가시화 도표와 상세 전략이 포함된 프리미엄 보고서를 생성 중입니다..."):
             client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
             
             system_prompt = """
@@ -339,7 +346,7 @@ if submitted:
             - **현업 적용을 위한 피드백 루프 및 상시 점검 체계 구축**: (현업 연계 방안 및 성과 평가 지표 설정 방안 제시)
             """
             
-            user_data = f"- 이름: {name}, 직무: {job}\n- 프로필코드: {mbti}, 생년월일: {birth}, 혈액형: {blood_type}\n- 내면동기척도: 완벽({e1}),조력({e2}),성취({e3}),독창({e4}),탐구({e5}),책임({e6}),열정({e7}),결단({e8}),조화({e9})"
+            user_data = f"- 이름: {name}, 직무: {job}\n- 프로필코드: {mbti}, 생년월일: {birth}, 혈액형: {blood_type}\n- 9원 성향 점수: 1유형({e1}), 2유형({e2}), 3유형({e3}), 4유형({e4}), 5유형({e5}), 6유형({e6}), 7유형({e7}), 8유형({e8}), 9유형({e9})"
             
             response = client.chat.completions.create(
                 model="gpt-4o-mini", 
@@ -355,18 +362,18 @@ if submitted:
                 page1_text = parts[0]
                 page2_text = "## 역량 다각화" + parts[1] if len(parts) > 1 else raw_content
             
-            st.success("💎 9원 성향 분석 모델 다이어그램이 포함된 프리미엄 보고서가 완성되었습니다.")
+            st.success("💎 9원 성향 점수 방사형 도표가 포함된 프리미엄 보고서가 완성되었습니다.")
             
             # 웹 화면 출력
             st.markdown("<div class='report-box'>", unsafe_allow_html=True)
-            st.markdown("### [PAGE 1] 9원 성향 분석 및 심리 동기 진단 결과")
+            st.markdown("### [PAGE 1] 9원 성향 방사형 점수 가시화 및 심리 진단 결과")
             st.markdown(page1_text)
             st.markdown("---")
             st.markdown("### [PAGE 2] 인문교양·토론 및 마스터 액션 플랜")
             st.markdown(page2_text)
             st.markdown("</div>", unsafe_allow_html=True)
             
-            # PDF 다운로드 버튼
-            pdf_file = create_pdf(page1_text, page2_text, name, [e1, e2, e3, e4, e7])
+            # PDF 다운로드 버튼 (9가지 점수를 모두 전달)
+            pdf_file = create_pdf(page1_text, page2_text, name, [e1, e2, e3, e4, e5, e6, e7, e8, e9])
             with open(pdf_file, "rb") as f:
                 st.download_button("📕 프리미엄 PDF 보고서 다운로드", data=f, file_name=pdf_file, mime="application/pdf", use_container_width=True)
