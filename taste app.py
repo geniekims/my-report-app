@@ -33,7 +33,7 @@ with st.form("user_input_form"):
     st.markdown("### 👤 기본 프로필 및 심리 성향 진단")
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1: 
-        name = st.text_input("성명", placeholder="예: 김도영")
+        name = st.text_input("성명", placeholder="예: 홍길동")
     with col2: 
         birth = st.date_input(
             "생년월일", 
@@ -53,7 +53,7 @@ with st.form("user_input_form"):
     with col4: 
         mbti = st.selectbox("MBTI", mbti_list)
     with col5: 
-        job = st.text_input("직무 / 전공", placeholder="예: 생산직")
+        job = st.text_input("직무 / 전공", placeholder="예: 데이터전문가")
     
     st.markdown("---")
     st.markdown("### 📊 다차원 내면 동기 척도 (0~20점)")
