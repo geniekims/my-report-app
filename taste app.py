@@ -28,18 +28,21 @@ st.markdown("""
 
 st.markdown("<h1 style='text-align: center; color: #2B4C7E; background-color:#E9EEF5; padding:20px; border-radius:8px;'>심층 역량 및 직무 적합도 평가 보고서</h1>", unsafe_allow_html=True)
 
-# 2. 사용자 입력 폼 (MBTI 추가)
+# 2. 사용자 입력 폼
 with st.form("user_input_form"):
     st.markdown("### 👤 기본 프로필 및 심리 성향 진단")
     col1, col2, col3, col4, col5 = st.columns(5)
-    with col1: name = st.text_input("성명", placeholder="예: 홍길동")
-    with col2: birth = st.date_input(
+    with col1: 
+        name = st.text_input("성명", placeholder="예: 김도영")
+    with col2: 
+        birth = st.date_input(
             "생년월일", 
-            value=datetime.date(1995, 1, 1), 
-            min_value=datetime.date(1900, 1, 1), 
+            value=datetime.date(2000, 1, 1), 
+            min_value=datetime.date(1950, 1, 1), 
             max_value=datetime.date.today()
         )
-    with col3: blood_type = st.selectbox("혈액형", ["A형", "B형", "O형", "AB형"])
+    with col3: 
+        blood_type = st.selectbox("혈액형", ["A형", "B형", "O형", "AB형"])
     
     mbti_list = [
         "ISTJ", "ISFJ", "INFJ", "INTJ", 
@@ -47,8 +50,10 @@ with st.form("user_input_form"):
         "ESTP", "ESFP", "ENFP", "ENTP", 
         "ESTJ", "ESFJ", "ENFJ", "ENTJ"
     ]
-    with col4: mbti = st.selectbox("MBTI", mbti_list)
-    with col5: job = st.text_input("직무 / 전공", placeholder="예: 데이터 분석가")
+    with col4: 
+        mbti = st.selectbox("MBTI", mbti_list)
+    with col5: 
+        job = st.text_input("직무 / 전공", placeholder="예: 생산직")
     
     st.markdown("---")
     st.markdown("### 📊 다차원 내면 동기 척도 (0~20점)")
@@ -56,27 +61,27 @@ with st.form("user_input_form"):
     
     col_e1, col_e2, col_e3 = st.columns(3)
     with col_e1:
-        e1 = st.number_input("1-완벽성 및 원칙 지향", 0, 20, 15)
-        e4 = st.number_input("4-독창성 및 표현 지향", 0, 20, 12)
-        e7 = st.number_input("7-열정 및 비전 지향", 0, 20, 10)
+        e1 = st.number_input("완벽성 및 원칙 지향", 0, 20, 15)
+        e4 = st.number_input("독창성 및 표현 지향", 0, 20, 12)
+        e7 = st.number_input("열정 및 비전 지향", 0, 20, 10)
     with col_e2:
-        e2 = st.number_input("2-조력 및 공감 지향", 0, 20, 14)
-        e5 = st.number_input("5-탐구 및 분석 지향", 0, 20, 18)
-        e8 = st.number_input("8-도전 및 결단 지향", 0, 20, 11)
+        e2 = st.number_input("조력 및 공감 지향", 0, 20, 14)
+        e5 = st.number_input("탐구 및 분석 지향", 0, 20, 18)
+        e8 = st.number_input("도전 및 결단 지향", 0, 20, 11)
     with col_e3:
-        e3 = st.number_input("3-성취 및 목표 지향", 0, 20, 16)
-        e6 = st.number_input("6-책임 및 안정 지향", 0, 20, 13)
-        e9 = st.number_input("9-조화 및 수용 지향", 0, 20, 9)
+        e3 = st.number_input("성취 및 목표 지향", 0, 20, 16)
+        e6 = st.number_input("책임 및 안정 지향", 0, 20, 13)
+        e9 = st.number_input("조화 및 수용 지향", 0, 20, 9)
 
     submitted = st.form_submit_button("A4 2페이지 분량 종합 평가 보고서 생성", use_container_width=True)
 
-# 3. ReportLab 자체 도형 생성 함수 (외부 패키지 불필요)
+# 3. ReportLab 자체 도형 생성 함수 (나눔고딕 폰트 적용)
 def create_bar_drawing(title, categories, scores, max_val=100):
-    d = Drawing(250, 160)
-    d.add(Rect(0, 0, 250, 160, fillColor=colors.HexColor('#F8FAFC'), strokeColor=colors.HexColor('#B4C6E7'), strokeWidth=0.5, rx=5, ry=5))
-    d.add(String(15, 140, title, fontName='NanumGothicBold', fontSize=10, fillColor=colors.HexColor('#2B4C7E')))
+    d = Drawing(250, 145)
+    d.add(Rect(0, 0, 250, 145, fillColor=colors.HexColor('#F8FAFC'), strokeColor=colors.HexColor('#B4C6E7'), strokeWidth=0.5, rx=5, ry=5))
+    d.add(String(15, 126, title, fontName='NanumGothicBold', fontSize=10, fillColor=colors.HexColor('#2B4C7E')))
     
-    y = 115
+    y = 103
     for cat, score in zip(categories, scores):
         d.add(String(15, y, cat, fontName='NanumGothic', fontSize=8, fillColor=colors.HexColor('#333333')))
         d.add(Rect(75, y+1, 120, 8, fillColor=colors.HexColor('#E2E8F0'), strokeColor=None))
@@ -85,33 +90,37 @@ def create_bar_drawing(title, categories, scores, max_val=100):
         if max_val == 20: bar_color = colors.HexColor('#2B4C7E')
         d.add(Rect(75, y+1, bar_width, 8, fillColor=bar_color, strokeColor=None))
         d.add(String(200, y, f"{score}", fontName='NanumGothicBold', fontSize=8, fillColor=colors.HexColor('#333333')))
-        y -= 22
+        y -= 20
     return d
 
-# 4. PDF 생성 (A4 2페이지 레이아웃)
+# 4. PDF 생성 (텍스트 밀착 및 폰트 최적화 레이아웃)
 def create_pdf(text, user_name, motiv_scores, big5_scores, sw_scores):
     filename = f"{user_name}_Assessment_Report.pdf"
-    doc = SimpleDocTemplate(filename, pagesize=A4, rightMargin=35, leftMargin=35, topMargin=40, bottomMargin=40)
+    doc = SimpleDocTemplate(filename, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=25, bottomMargin=25)
     
     font_path = "NanumGothic.ttf"
     bold_path = "NanumGothicBold.ttf"
     if not os.path.exists(bold_path): bold_path = font_path
-    pdfmetrics.registerFont(TTFont('NanumGothic', font_path))
-    pdfmetrics.registerFont(TTFont('NanumGothicBold', bold_path))
     
-    title_style = ParagraphStyle('MainTitle', fontName='NanumGothicBold', fontSize=18, textColor=colors.white, alignment=TA_CENTER)
-    header_style = ParagraphStyle('SectionHeader', fontName='NanumGothicBold', fontSize=12, textColor=colors.white, alignment=TA_CENTER)
-    sub_style = ParagraphStyle('SubHeader', fontName='NanumGothicBold', fontSize=11, textColor=colors.HexColor('#2B4C7E'), spaceBefore=10, spaceAfter=5)
-    body_style = ParagraphStyle('Body', fontName='NanumGothic', fontSize=9.5, leading=16, textColor=colors.HexColor('#333333'))
-    th_style = ParagraphStyle('TableHeader', fontName='NanumGothicBold', fontSize=9, alignment=TA_CENTER, textColor=colors.HexColor('#1F385C'))
-    td_style = ParagraphStyle('TableData', fontName='NanumGothic', fontSize=9, leading=13, alignment=TA_LEFT)
+    try:
+        pdfmetrics.registerFont(TTFont('NanumGothic', font_path))
+        pdfmetrics.registerFont(TTFont('NanumGothicBold', bold_path))
+    except:
+        pass
+    
+    title_style = ParagraphStyle('MainTitle', fontName='NanumGothicBold', fontSize=16, textColor=colors.white, alignment=TA_CENTER)
+    header_style = ParagraphStyle('SectionHeader', fontName='NanumGothicBold', fontSize=11, textColor=colors.white, alignment=TA_CENTER)
+    sub_style = ParagraphStyle('SubHeader', fontName='NanumGothicBold', fontSize=10, textColor=colors.HexColor('#2B4C7E'), spaceBefore=6, spaceAfter=2)
+    body_style = ParagraphStyle('Body', fontName='NanumGothic', fontSize=9, leading=14, textColor=colors.HexColor('#333333'))
+    th_style = ParagraphStyle('TableHeader', fontName='NanumGothicBold', fontSize=8.5, alignment=TA_CENTER, textColor=colors.HexColor('#1F385C'))
+    td_style = ParagraphStyle('TableData', fontName='NanumGothic', fontSize=8.5, leading=12, alignment=TA_LEFT)
 
     story = []
     
-    main_banner = Table([[Paragraph(f"<b>심층 역량 및 직무 적합도 통합 평가 | {user_name}</b>", title_style)]], colWidths=[525], rowHeights=[40])
+    main_banner = Table([[Paragraph(f"<b>심층 역량 및 직무 적합도 통합 평가 | {user_name}</b>", title_style)]], colWidths=[535], rowHeights=[32])
     main_banner.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#4A70B0')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,-1), 'CENTER')]))
     story.append(main_banner)
-    story.append(Spacer(1, 15))
+    story.append(Spacer(1, 8))
     
     d1 = create_bar_drawing("내면 동기 밸런스 프로파일 (0~20)", ['완벽·조력·성취', '독창·탐구·책임', '열정·결단·조화'], [sum(motiv_scores[:3])//3, sum(motiv_scores[3:6])//3, sum(motiv_scores[6:])//3], 20)
     d2 = create_bar_drawing("성격 5요인 진단 (T-Score)", ['외향성', '호감성', '성실성', '정서안정성', '개방성'], big5_scores, 100)
@@ -122,10 +131,10 @@ def create_pdf(text, user_name, motiv_scores, big5_scores, sw_scores):
     chart_table = Table([
         [d1, d2],
         [d3, comment_p]
-    ], colWidths=[262.5, 262.5])
-    chart_table.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('BOTTOMPADDING', (0,0), (-1,-1), 15)]))
+    ], colWidths=[267.5, 267.5])
+    chart_table.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('BOTTOMPADDING', (0,0), (-1,-1), 5), ('TOPPADDING', (0,0), (-1,-1), 0)]))
     story.append(chart_table)
-    story.append(Spacer(1, 10))
+    story.append(Spacer(1, 5))
 
     table_data = []
     for line in text.split('\n'):
@@ -143,31 +152,36 @@ def create_pdf(text, user_name, motiv_scores, big5_scores, sw_scores):
             continue
         
         if table_data:
-            t = Table(table_data, colWidths=[100, 190, 235])
+            t = Table(table_data, colWidths=[100, 190, 245])
             t.setStyle(TableStyle([
                 ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#DDE6F0')),
                 ('ALIGN', (0,0), (-1,-1), 'CENTER'),
                 ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
                 ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#B4C6E7')),
-                ('TOPPADDING', (0,0), (-1,-1), 8), ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+                ('TOPPADDING', (0,0), (-1,-1), 5), ('BOTTOMPADDING', (0,0), (-1,-1), 5),
                 ('BACKGROUND', (0,1), (0,-1), colors.HexColor('#F4F7FB')),
             ]))
             story.append(t)
-            story.append(Spacer(1, 15))
+            story.append(Spacer(1, 8))
             table_data = []
 
         if line.startswith('## '):
-            story.append(Spacer(1, 10))
-            sec_banner = Table([[Paragraph(line[3:], header_style)]], colWidths=[525], rowHeights=[25])
+            story.append(Spacer(1, 5))
+            sec_banner = Table([[Paragraph(line[3:], header_style)]], colWidths=[535], rowHeights=[22])
             sec_banner.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#5B80C2')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE')]))
             story.append(sec_banner)
-            story.append(Spacer(1, 8))
-        elif line.startswith('### '): story.append(Paragraph(line[4:], sub_style))
-        elif line.startswith('- '): story.append(Paragraph(f"• {line[2:]}", body_style)); story.append(Spacer(1, 4))
-        else: story.append(Paragraph(line, body_style)); story.append(Spacer(1, 4))
+            story.append(Spacer(1, 4))
+        elif line.startswith('### '): 
+            story.append(Paragraph(line[4:], sub_style))
+        elif line.startswith('- '): 
+            story.append(Paragraph(f"• {line[2:]}", body_style))
+            story.append(Spacer(1, 2))
+        else: 
+            story.append(Paragraph(line, body_style))
+            story.append(Spacer(1, 2))
             
     if table_data:
-        t = Table(table_data, colWidths=[100, 190, 235])
+        t = Table(table_data, colWidths=[100, 190, 245])
         t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor('#DDE6F0')), ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#B4C6E7')), ('BACKGROUND', (0,1), (0,-1), colors.HexColor('#F4F7FB'))]))
         story.append(t)
 
@@ -176,25 +190,28 @@ def create_pdf(text, user_name, motiv_scores, big5_scores, sw_scores):
 
 # 5. AI 실행 및 출력
 if submitted:
-    if not name: st.warning("성명을 입력해주세요.")
+    if not name: 
+        st.warning("성명을 입력해주세요.")
     else:
         with st.spinner("대상자의 MBTI 및 심층 데이터를 복합 분석하여 종합 리포트와 지표를 구성 중입니다... (약 20~30초 소요)"):
             client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
             
+            # 프롬프트 내 가이드 서식 유출 방지 및 깔끔한 출력 강화
             system_prompt = """
             # ROLE: 글로벌 수석 커리어 컨설턴트 및 조직 심리 전략가
             # RULES:
-            1. 분량 규정: 반드시 A4 2페이지 분량이 꽉 찰 수 있도록 각 하위 섹션마다 최소 500자 이상 구체적으로 작성할 것.
-            2. 데이터 복합 유추: 제공된 MBTI, 생년월일(별자리/기질 유추), 혈액형, 내면 동기 점수 9개를 입체적으로 분석하여, 
+            1. 분량 규정: 반드시 A4 2페이지 분량이 꽉 찰 수 있도록 각 하위 섹션마다 충분하고 구체적으로 작성할 것.
+            2. 데이터 복합 유추: 제공된 MBTI, 생년월일, 혈액형, 내면 동기 점수 9개를 입체적으로 분석하여, 
                - 첫 번째 줄: 성격 5요인 점수 5개 (외향, 호감, 성실, 정서안정, 개방 / 0~100점)
                - 두 번째 줄: 직무 역량 점수 5개 (기획분석, 추진리더십, 협업소통, 창의문제해결, 위기관리 / 0~100점)
                를 각각 쉼표로 구분하여 숫자만 작성할 것. (예: 65,80,75,45,70 / 85,65,80,70,45)
-            3. 금지어 철저 준수: 리포트 본문 내에서 '사주', '명리', '별자리' 등 출처를 유추할 수 있는 키워드는 절대 언급 금지. (단, MBTI 성향 유형은 전문적인 심리 진단 지표로서 본문 내 자연스럽게 활용 가능). 완벽한 비즈니스 진단 보고서 톤 유지.
-            4. 아래 OUTPUT FORMAT의 마크다운(##) 구조를 정확히 준수할 것.
+            3. 금지어 철저 준수: 리포트 본문 내에서 '사주', '명리', '별자리' 등 출처를 유추할 수 있는 키워드는 절대 언급 금지. 완벽한 비즈니스 진단 보고서 톤 유지.
+            4. 불필요한 레이블이나 플레이스홀더 문구(예: "** 내용 **" 등)를 절대 출력하지 말고 곧바로 본문 내용을 작성할 것.
+            5. 아래 OUTPUT FORMAT의 마크다운(##) 구조를 정확히 준수할 것.
             
             # OUTPUT FORMAT:
-            [첫 줄]: 성격 5요인 점수 5개 (예: 65,80,75,45,70)
-            [둘째 줄]: 직무 역량 점수 5개 (예: 85,65,80,70,45)
+            65,80,75,45,70
+            85,65,80,70,45
             ## 심리 동기 및 행동 패턴 분석
             - **에너지 원천과 행동 동기**: (MBTI 성향 및 내면 동기를 연계하여 매우 상세하게 기술)
             - **성격적 강점과 업무 스타일**: (매우 상세하게 기술)
@@ -208,9 +225,9 @@ if submitted:
             ## 심층 요약표
             | 분석 카테고리 | 진단 결과 요약 (상세 기술) | 맞춤형 성장 솔루션 (구체적 액션) |
             | :--- | :--- | :--- |
-            | **커리어 성취 및 전문성** | ... | ... |
-            | **마음 근육 및 스트레스** | ... | ... |
-            | **조직 내 대인관계** | ... | ... |
+            | **커리어 성취 및 전문성** | (구체적 내용 기술) | (구체적 액션 기술) |
+            | **마음 근육 및 스트레스** | (구체적 내용 기술) | (구체적 액션 기술) |
+            | **조직 내 대인관계** | (구체적 내용 기술) | (구체적 액션 기술) |
             
             ## Master Action Plan
             - **전략적 네트워킹 및 멘토링 세션 참여**: (구체적 시나리오 제시)
@@ -238,7 +255,7 @@ if submitted:
                 sw_scores = [80, 70, 75, 65, 60]
                 report_content = raw_response
             
-            st.success("✅ A4 2페이지 분량의 심층 보고서가 성공적으로 생성되었습니다.")
+            st.success("✅ 불필요한 문구가 제거되고 정돈된 A4 2페이지 분량의 심층 보고서가 생성되었습니다.")
             
             pdf_file = create_pdf(report_content, name, [e1, e2, e3, e4, e5, e6, e7, e8, e9], big5_scores, sw_scores)
             with open(pdf_file, "rb") as f:
