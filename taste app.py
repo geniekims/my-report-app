@@ -41,7 +41,7 @@ st.markdown("""
 st.markdown("""
     <div style='background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%); padding: 30px; border-radius: 12px; text-align: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
         <h1 style='color: white; margin-bottom: 10px; font-size: 28px;'>Executive Intelligence Report</h1>
-        <p style='color: #94A3B8; font-size: 15px; margin: 0;'>방사형 가시화 도표 및 에니어그램 심층 분석 솔루션</p>
+        <p style='color: #94A3B8; font-size: 15px; margin: 0;'>9원 성향 점수별 방사형 가시화 도표 및 심층 분석 솔루션</p>
     </div>
 """, unsafe_allow_html=True)
 
@@ -63,8 +63,8 @@ with st.form("user_input_form"):
         job = st.text_input("직무 / 전공", value="생산직", placeholder="예: 생산직")
     
     st.markdown("---")
-    st.markdown("### 📊 성향별 점수 입력 (0~20점)")
-    st.caption("※ 각 유형별 점수를 입력하면 방사형 도표로 시각화되며, 에니어그램 기질 분석이 함께 도출됩니다.")
+    st.markdown("### 📊 9원 성향별 점수 입력 (0~20점)")
+    st.caption("※ 각 유형별 점수를 입력하면 다각형 형태의 방사형 도표로 시각화되며, 전문 심리 기질 분석이 함께 도출됩니다.")
     
     col_e1, col_e2, col_e3 = st.columns(3)
     with col_e1:
@@ -91,7 +91,7 @@ def create_radar_polygon_drawing(scores):
     d = Drawing(535, 190)
     d.add(Rect(0, 0, 535, 190, fillColor=colors.HexColor('#F8FAFC'), strokeColor=colors.HexColor('#CBD5E1'), strokeWidth=0.8, rx=6, ry=6))
     
-    d.add(String(15, 172, "성향별 점수 분포 방사형 가시화 도표", fontName='NanumGothicBold', fontSize=10, fillColor=colors.HexColor('#1E293B')))
+    d.add(String(15, 172, "9원 성향별 점수 분포 방사형 가시화 도표", fontName='NanumGothicBold', fontSize=10, fillColor=colors.HexColor('#1E293B')))
     
     d.add(Rect(415, 170, 12, 8, fillColor=colors.HexColor('#F43F5E'), strokeColor=colors.HexColor('#E11D48'), rx=2, ry=2))
     d.add(String(432, 171, "성향 선호도 점수", fontName='NanumGothic', fontSize=8, fillColor=colors.HexColor('#334155')))
@@ -173,7 +173,7 @@ def create_pdf(text_page1, text_page2, user_name, motiv_scores):
     story = []
     
     # -------------------------------------------------------------------------
-    # [PAGE 1] 방사형 가시화 도표 및 에니어그램 심리 분석 결과
+    # [PAGE 1] 방사형 가시화 도표 및 심리 동기 진단 결과
     # -------------------------------------------------------------------------
     banner1 = Table([[Paragraph(f"<b>EXECUTIVE INTELLIGENCE REPORT (1/2) &nbsp;|&nbsp; {user_name}</b>", title_style)]], colWidths=[535], rowHeights=[20])
     banner1.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#0F172A')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,-1), 'CENTER')]))
@@ -184,7 +184,7 @@ def create_pdf(text_page1, text_page2, user_name, motiv_scores):
     story.append(create_radar_polygon_drawing(motiv_scores))
     story.append(Spacer(1, 4))
     
-    comment_text = "<b>[전문가 진단 코멘트]:</b> 상단 방사형 가시화 도표는 9가지 기질 유형별 선호도 점수를 보여줍니다. 이를 바탕으로 도출된 에니어그램 심층 특성과 행동 패턴을 아래 분석에서 상세히 확인하실 수 있습니다."
+    comment_text = "<b>[전문가 진단 코멘트]:</b> 상단 방사형 가시화 도표는 9가지 성향별 선호도 점수를 보여줍니다. 이를 바탕으로 도출된 심층 특성과 행동 패턴을 아래 분석에서 상세히 확인하실 수 있습니다."
     comment_table = Table([[Paragraph(comment_text, comment_style)]], colWidths=[535])
     comment_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#EFF6FF')),
@@ -290,22 +290,22 @@ if submitted:
     if not name: 
         st.warning("성명을 입력해주세요.")
     else:
-        with st.spinner("💎 방사형 가시화 도표와 에니어그램 심층 분석 보고서를 생성 중입니다..."):
+        with st.spinner("💎 방사형 가시화 도표와 심층 심리 분석 보고서를 생성 중입니다..."):
             client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
             
             system_prompt = """
-            # ROLE: 글로벌 최고 경영 컨설턴트 및 에니어그램 심리 전략 전문가
+            # ROLE: 글로벌 최고 경영 컨설턴트 및 프리미엄 조직 심리 전략가
             # RULES & CONSTRAINTS:
-            1. 에니어그램(Enneagram) 기반 분석 내용(9가지 기질 유형별 핵심 동기, 스트레스 분열/통합 방향성 등)을 반드시 포함하여 상세히 기술할 것.
+            1. 절대 금지 사항: 특정 진단 검사 명칭('사주', '명리', '별자리', 'MBTI', '에니어그램' 등) 절대 직접 언급 금지. 전문 비즈니스 및 조직 심리, 9원 성향 분석 용어만 사용할 것.
             2. 내용 풍성화 및 상세화: 빈칸과 여백이 남지 않도록 모든 항목별로 매우 상세하고 깊이 있는 문장으로 가득 채워 작성할 것.
             3. 마스터플랜 다양화: [인지/사유 고도화], [소통/관계 협업], [실무 실행력 강화], [자기관리/스트레스 루틴] 등 다채로운 영역으로 구체화할 것.
             4. 출력 형식: 반드시 아래의 구분자(`---PAGE_SPLIT---`)를 기준으로 페이지 1과 페이지 2 내용으로 나누어 출력할 것.
             
             # OUTPUT FORMAT:
-            ## 에니어그램 기반 심리 동기 및 행동 패턴 심층 분석
-            - **핵심 에니어그램 기질과 동기 구조**: (최소 4~5문장 이상으로 에니어그램 유형 특성과 동기 구조를 상세히 기술)
-            - **성격적 강점과 현업 업무 스타일**: (에니어그램 특성에 기반한 강점과 구체적인 업무 상황 연계 기술)
-            - **무의식적 스트레스 요인 및 분열/통합 메커니즘**: (에니어그램 스트레스 분열 방향과 안정 시 통합 방향성을 상세히 분석)
+            ## 9원 성향 기반 심리 동기 및 행동 패턴 심층 분석
+            - **고유 에너지 원천과 동기 구조**: (최소 4~5문장 이상으로 9원 성향 특성과 동기 구조를 상세히 기술)
+            - **성격적 강점과 현업 업무 스타일**: (성향별 특성에 기반한 강점과 구체적인 업무 상황 연계 기술)
+            - **무의식적 스트레스 요인 및 대응 메커니즘**: (구체적인 스트레스 유발 상황과 심리적 방어 기제 분석을 상세히 기술)
             
             ## 직무 적합도 및 핵심 역량 정밀 진단
             - **강점 극대화 영역 및 발휘 시나리오**: (실무 현장에서의 구체적 성과 창출 시나리오를 상세히 기술)
@@ -345,11 +345,11 @@ if submitted:
                 page1_text = parts[0]
                 page2_text = "## 역량 다각화" + parts[1] if len(parts) > 1 else raw_content
             
-            st.success("💎 방사형 가시화 도표와 에니어그램 분석이 포함된 프리미엄 보고서가 완성되었습니다.")
+            st.success("💎 방사형 가시화 도표와 심층 성향 분석 보고서가 완성되었습니다.")
             
             # 웹 화면 출력
             st.markdown("<div class='report-box'>", unsafe_allow_html=True)
-            st.markdown("### [PAGE 1] 방사형 점수 가시화 및 에니어그램 심리 진단 결과")
+            st.markdown("### [PAGE 1] 9원 성향 방사형 점수 가시화 및 심리 진단 결과")
             st.markdown(page1_text)
             st.markdown("---")
             st.markdown("### [PAGE 2] 인문교양·토론 및 마스터 액션 플랜")
