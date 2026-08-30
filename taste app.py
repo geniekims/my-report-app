@@ -1,24 +1,15 @@
 import streamlit as st
 from openai import OpenAI
 from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from reportlab.graphics.shapes import Drawing, Rect, String, Line, Group
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import os
 import datetime
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
-
-# 한글 폰트 설정 (NanumGothic 적용)
-font_path = "NanumGothic.ttf"
-if os.path.exists(font_path):
-    font_name = fm.FontProperties(fname=font_path).get_name()
-    plt.rc('font', family=font_name)
-plt.rcParams['axes.unicode_minus'] = False
 
 # 1. 페이지 설정 및 UI 스타일
 st.set_page_config(page_title="Executive Intelligence Report", page_icon="💼", layout="wide")
@@ -66,66 +57,30 @@ with st.form("user_input_form"):
 
     submitted = st.form_submit_button("A4 2페이지 분량 종합 평가 보고서 생성", use_container_width=True)
 
-# 3. Matplotlib 기반 차트 생성 함수들 (서버 안정성 확보)
-def create_radar_chart(scores, save_path):
-    categories = ['완벽성', '조력성', '성취성', '독창성', '탐구성', '책임성', '열정성', '결단성', '조화성']
-    N = len(categories)
-    angles = [n / float(N) * 2 * np.pi for n in range(N)]
-    angles += angles[:1]
+# 3. ReportLab 자체 도형 생성 함수 (외부 패키지 불필요)
+def create_bar_drawing(title, categories, scores, max_val=100):
+    d = Drawing(250, 160)
+    d.add(Rect(0, 0, 250, 160, fillColor=colors.HexColor('#F8FAFC'), strokeColor=colors.HexColor('#B4C6E7'), strokeWidth=0.5, rx=5, ry=5))
+    d.add(String(15, 140, title, fontName='NanumGothicBold', fontSize=10, fillColor=colors.HexColor('#2B4C7E')))
     
-    scores_plot = list(scores) + [scores[0]]
-    
-    fig, ax = plt.subplots(figsize=(5, 4), subplot_kw=dict(polar=True))
-    ax.plot(angles, scores_plot, linewidth=2, linestyle='solid', color='#2B4C7E')
-    ax.fill(angles, scores_plot, color='#2B4C7E', alpha=0.2)
-    
-    ax.set_theta_offset(np.pi / 2)
-    ax.set_theta_direction(-1)
-    ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(categories, fontsize=9)
-    ax.set_yticks([5, 10, 15, 20])
-    ax.set_ylim(0, 20)
-    
-    plt.title("내면 동기 밸런스 프로파일", size=11, color="#2B4C7E", weight='bold', pad=15)
-    plt.tight_layout()
-    plt.savefig(save_path, dpi=200)
-    plt.close()
-
-def create_big5_chart(scores, save_path):
-    traits = ['외향성', '호감성', '성실성', '정서안정성', '개방성']
-    fig, ax = plt.subplots(figsize=(5, 4))
-    ax.plot(scores, traits, marker='o', color='#1F385C', linewidth=2.5, markersize=8)
-    ax.set_xlim(0, 100)
-    ax.set_xlabel('T-Score', fontsize=9)
-    ax.set_title("성격 5요인 진단 (종합 유추)", size=11, color="#2B4C7E", weight='bold', pad=15)
-    ax.grid(True, linestyle='--', alpha=0.5)
-    plt.tight_layout()
-    plt.savefig(save_path, dpi=200)
-    plt.close()
-
-def create_sw_chart(scores, save_path):
-    categories = ['기획분석력', '추진리더십', '협업소통력', '창의문제해결', '위기관리력']
-    colors_list = ['#2B4C7E' if s >= 60 else '#D9534F' for s in scores]
-    
-    fig, ax = plt.subplots(figsize=(5, 4))
-    y_pos = np.arange(len(categories))
-    ax.barh(y_pos, scores, color=colors_list, height=0.6)
-    ax.set_yticks(y_pos)
-    ax.set_yticklabels(categories, fontsize=9)
-    ax.invert_yaxis()  # 위부터 순서대로 표시
-    ax.set_xlim(0, 100)
-    ax.set_xlabel('점수', fontsize=9)
-    ax.set_title("직무 역량 분포 (Blue:강점, Red:보완)", size=11, color="#2B4C7E", weight='bold', pad=15)
-    ax.grid(True, axis='x', linestyle='--', alpha=0.5)
-    plt.tight_layout()
-    plt.savefig(save_path, dpi=200)
-    plt.close()
+    y = 115
+    for cat, score in zip(categories, scores):
+        d.add(String(15, y, cat, fontName='NanumGothic', fontSize=8, fillColor=colors.HexColor('#333333')))
+        d.add(Rect(75, y+1, 120, 8, fillColor=colors.HexColor('#E2E8F0'), strokeColor=None))
+        bar_width = (score / max_val) * 120
+        bar_color = colors.HexColor('#2B4C7E') if score >= 60 else colors.HexColor('#D9534F')
+        if max_val == 20: bar_color = colors.HexColor('#2B4C7E') # 동기는 모두 파란색
+        d.add(Rect(75, y+1, bar_width, 8, fillColor=bar_color, strokeColor=None))
+        d.add(String(200, y, f"{score}", fontName='NanumGothicBold', fontSize=8, fillColor=colors.HexColor('#333333')))
+        y -= 22
+    return d
 
 # 4. PDF 생성 (A4 2페이지 레이아웃)
-def create_pdf(text, user_name, chart1, chart2, chart3):
+def create_pdf(text, user_name, motiv_scores, big5_scores, sw_scores):
     filename = f"{user_name}_Assessment_Report.pdf"
     doc = SimpleDocTemplate(filename, pagesize=A4, rightMargin=35, leftMargin=35, topMargin=40, bottomMargin=40)
     
+    font_path = "NanumGothic.ttf"
     bold_path = "NanumGothicBold.ttf"
     if not os.path.exists(bold_path): bold_path = font_path
     pdfmetrics.registerFont(TTFont('NanumGothic', font_path))
@@ -145,9 +100,16 @@ def create_pdf(text, user_name, chart1, chart2, chart3):
     story.append(main_banner)
     story.append(Spacer(1, 15))
     
+    # 지표 시각화 컴포넌트 배치
+    d1 = create_bar_drawing("내면 동기 밸런스 프로파일 (0~20)", ['완벽·조력·성취', '독창·탐구·책임', '열정·결단·조화'], [sum(motiv_scores[:3])//3, sum(motiv_scores[3:6])//3, sum(motiv_scores[6:])//3], 20)
+    d2 = create_bar_drawing("성성 5요인 진단 (T-Score)", ['외향성', '호감성', '성실성', '정서안정성', '개방성'], big5_scores, 100)
+    d3 = create_bar_drawing("직무 역량 분포 (Blue:강점)", ['기획분석력', '추진리더십', '협업소통력', '창의문제해결', '위기관리력'], sw_scores, 100)
+    
+    comment_p = Paragraph("<b>[도표 종합 분석 코멘트]</b><br/><br/>본 분석 모델은 대상자의 고유 기질적 특성, 다차원 심리 동기 구조, 그리고 현업 직무 수행에 필요한 핵심 역량을 정밀 융합하여 도출되었습니다.<br/><br/>푸른색 바는 조직 내에서 즉시 발휘될 수 있는 <b>핵심 강점 영역</b>을 의미합니다.", body_style)
+    
     chart_table = Table([
-        [Image(chart1, width=255, height=190), Image(chart2, width=255, height=190)],
-        [Image(chart3, width=255, height=190), Paragraph("<b>[도표 종합 분석 코멘트]</b><br/><br/>본 분석 모델은 대상자의 고유 기질적 특성, 다차원 심리 동기 구조, 그리고 현업 직무 수행에 필요한 핵심 역량을 정밀 융합하여 도출되었습니다.<br/><br/>푸른색 그래프는 조직 내에서 즉시 발휘될 수 있는 <b>핵심 강점 영역</b>을 의미하며, 붉은색으로 표시된 바는 지속적인 모니터링과 역량 보완이 요구되는 <b>중점 관리 영역</b>을 나타냅니다.", body_style)]
+        [d1, d2],
+        [d3, comment_p]
     ], colWidths=[262.5, 262.5])
     chart_table.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('BOTTOMPADDING', (0,0), (-1,-1), 15)]))
     story.append(chart_table)
@@ -256,24 +218,16 @@ if submitted:
                 sw_scores = [int(s.strip()) for s in lines[1].split(',')]
                 
                 if len(big5_scores) == 5 and len(sw_scores) == 5:
-                    b_ext, b_agr, b_con, b_neu, b_ope = big5_scores
-                    c_ana, c_lea, c_com, c_cre, c_det = sw_scores
                     report_content = '\n'.join(lines[2:]).strip()
                 else:
                     raise ValueError
             except:
-                b_ext, b_agr, b_con, b_neu, b_ope = [60, 75, 80, 50, 70]
-                c_ana, c_lea, c_com, c_cre, c_det = [80, 70, 75, 65, 60]
+                big5_scores = [60, 75, 80, 50, 70]
+                sw_scores = [80, 70, 75, 65, 60]
                 report_content = raw_response
-            
-            # 차트 이미지 생성 (Matplotlib 전환 완료)
-            chart1_path, chart2_path, chart3_path = "c1.png", "c2.png", "c3.png"
-            create_radar_chart([e1, e2, e3, e4, e5, e6, e7, e8, e9], chart1_path)
-            create_big5_chart([b_ext, b_agr, b_con, b_neu, b_ope], chart2_path)
-            create_sw_chart([c_ana, c_lea, c_com, c_cre, c_det], chart3_path)
             
             st.success("✅ A4 2페이지 분량의 심층 보고서가 성공적으로 생성되었습니다.")
             
-            pdf_file = create_pdf(report_content, name, chart1_path, chart2_path, chart3_path)
+            pdf_file = create_pdf(report_content, name, [e1, e2, e3, e4, e5, e6, e7, e8, e9], big5_scores, sw_scores)
             with open(pdf_file, "rb") as f:
                 st.download_button("📕 신용평가형 2Page PDF 보고서 다운로드", data=f, file_name=pdf_file, mime="application/pdf", use_container_width=True)
