@@ -9,7 +9,16 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import os
 import datetime
-import plotly.graph_objects as go
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+
+# 한글 폰트 설정 (NanumGothic 적용)
+font_path = "NanumGothic.ttf"
+if os.path.exists(font_path):
+    font_name = fm.FontProperties(fname=font_path).get_name()
+    plt.rc('font', family=font_name)
+plt.rcParams['axes.unicode_minus'] = False
 
 # 1. 페이지 설정 및 UI 스타일
 st.set_page_config(page_title="Executive Intelligence Report", page_icon="💼", layout="wide")
@@ -28,7 +37,7 @@ st.markdown("""
 
 st.markdown("<h1 style='text-align: center; color: #2B4C7E; background-color:#E9EEF5; padding:20px; border-radius:8px;'>심층 역량 및 직무 적합도 평가 보고서</h1>", unsafe_allow_html=True)
 
-# 2. 사용자 입력 폼 (별자리 입력 제거, 생년월일로 자동 유추)
+# 2. 사용자 입력 폼
 with st.form("user_input_form"):
     st.markdown("### 👤 기본 프로필 및 심리 성향 진단")
     col1, col2, col3, col4 = st.columns(4)
@@ -43,47 +52,81 @@ with st.form("user_input_form"):
     
     col_e1, col_e2, col_e3 = st.columns(3)
     with col_e1:
-        e1 = st.number_input("1번-완벽성 및 원칙 지향", 0, 20, 15)
-        e4 = st.number_input("4번-독창성 및 표현 지향", 0, 20, 12)
-        e7 = st.number_input("7번-열정 및 비전 지향", 0, 20, 10)
+        e1 = st.number_input("완벽성 및 원칙 지향", 0, 20, 15)
+        e4 = st.number_input("독창성 및 표현 지향", 0, 20, 12)
+        e7 = st.number_input("열정 및 비전 지향", 0, 20, 10)
     with col_e2:
-        e2 = st.number_input("2번-조력 및 공감 지향", 0, 20, 14)
-        e5 = st.number_input("5번-탐구 및 분석 지향", 0, 20, 18)
-        e8 = st.number_input("8번-도전 및 결단 지향", 0, 20, 11)
+        e2 = st.number_input("조력 및 공감 지향", 0, 20, 14)
+        e5 = st.number_input("탐구 및 분석 지향", 0, 20, 18)
+        e8 = st.number_input("도전 및 결단 지향", 0, 20, 11)
     with col_e3:
-        e3 = st.number_input("3번-성취 및 목표 지향", 0, 20, 16)
-        e6 = st.number_input("6번-책임 및 안정 지향", 0, 20, 13)
-        e9 = st.number_input("9번-조화 및 수용 지향", 0, 20, 9)
+        e3 = st.number_input("성취 및 목표 지향", 0, 20, 16)
+        e6 = st.number_input("책임 및 안정 지향", 0, 20, 13)
+        e9 = st.number_input("조화 및 수용 지향", 0, 20, 9)
 
     submitted = st.form_submit_button("A4 2페이지 분량 종합 평가 보고서 생성", use_container_width=True)
 
-# 3. 도표(차트) 생성 함수들
+# 3. Matplotlib 기반 차트 생성 함수들 (서버 안정성 확보)
 def create_radar_chart(scores, save_path):
     categories = ['완벽성', '조력성', '성취성', '독창성', '탐구성', '책임성', '열정성', '결단성', '조화성']
-    fig = go.Figure(data=[go.Scatterpolar(r=[*scores, scores[0]], theta=[*categories, categories[0]], fill='toself', line_color='#2B4C7E', fillcolor='rgba(43, 76, 126, 0.2)')])
-    fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 20])), showlegend=False, title=dict(text="내면 동기 밸런스 프로파일", font=dict(size=14, color="#2B4C7E")), margin=dict(l=30, r=30, t=40, b=20), paper_bgcolor='white')
-    fig.write_image(save_path, width=400, height=300, scale=2)
+    N = len(categories)
+    angles = [n / float(N) * 2 * np.pi for n in range(N)]
+    angles += angles[:1]
+    
+    scores_plot = list(scores) + [scores[0]]
+    
+    fig, ax = plt.subplots(figsize=(5, 4), subplot_kw=dict(polar=True))
+    ax.plot(angles, scores_plot, linewidth=2, linestyle='solid', color='#2B4C7E')
+    ax.fill(angles, scores_plot, color='#2B4C7E', alpha=0.2)
+    
+    ax.set_theta_offset(np.pi / 2)
+    ax.set_theta_direction(-1)
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(categories, fontsize=9)
+    ax.set_yticks([5, 10, 15, 20])
+    ax.set_ylim(0, 20)
+    
+    plt.title("내면 동기 밸런스 프로파일", size=11, color="#2B4C7E", weight='bold', pad=15)
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=200)
+    plt.close()
 
 def create_big5_chart(scores, save_path):
     traits = ['외향성', '호감성', '성실성', '정서안정성', '개방성']
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=scores, y=traits, mode='lines+markers', marker=dict(size=12, color='#1F385C'), line=dict(color='#4A70B0', width=3)))
-    fig.update_layout(xaxis=dict(range=[0, 100], title="T-Score"), title=dict(text="성격 5요인 진단 (종합 유추)", font=dict(size=14, color="#2B4C7E")), margin=dict(l=80, r=20, t=40, b=30), paper_bgcolor='white')
-    fig.write_image(save_path, width=400, height=300, scale=2)
+    fig, ax = plt.subplots(figsize=(5, 4))
+    ax.plot(scores, traits, marker='o', color='#1F385C', linewidth=2.5, markersize=8)
+    ax.set_xlim(0, 100)
+    ax.set_xlabel('T-Score', fontsize=9)
+    ax.set_title("성격 5요인 진단 (종합 유추)", size=11, color="#2B4C7E", weight='bold', pad=15)
+    ax.grid(True, linestyle='--', alpha=0.5)
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=200)
+    plt.close()
 
 def create_sw_chart(scores, save_path):
     categories = ['기획분석력', '추진리더십', '협업소통력', '창의문제해결', '위기관리력']
-    colors = ['#2B4C7E' if s >= 60 else '#D9534F' for s in scores]
-    fig = go.Figure(data=[go.Bar(x=scores, y=categories, orientation='h', marker_color=colors)])
-    fig.update_layout(xaxis=dict(range=[0, 100]), title=dict(text="직무 역량 분포 (Blue:강점, Red:보완)", font=dict(size=14, color="#2B4C7E")), margin=dict(l=80, r=20, t=40, b=30), paper_bgcolor='white')
-    fig.write_image(save_path, width=400, height=300, scale=2)
+    colors_list = ['#2B4C7E' if s >= 60 else '#D9534F' for s in scores]
+    
+    fig, ax = plt.subplots(figsize=(5, 4))
+    y_pos = np.arange(len(categories))
+    ax.barh(y_pos, scores, color=colors_list, height=0.6)
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(categories, fontsize=9)
+    ax.invert_yaxis()  # 위부터 순서대로 표시
+    ax.set_xlim(0, 100)
+    ax.set_xlabel('점수', fontsize=9)
+    ax.set_title("직무 역량 분포 (Blue:강점, Red:보완)", size=11, color="#2B4C7E", weight='bold', pad=15)
+    ax.grid(True, axis='x', linestyle='--', alpha=0.5)
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=200)
+    plt.close()
 
 # 4. PDF 생성 (A4 2페이지 레이아웃)
 def create_pdf(text, user_name, chart1, chart2, chart3):
     filename = f"{user_name}_Assessment_Report.pdf"
     doc = SimpleDocTemplate(filename, pagesize=A4, rightMargin=35, leftMargin=35, topMargin=40, bottomMargin=40)
     
-    font_path, bold_path = "NanumGothic.ttf", "NanumGothicBold.ttf"
+    bold_path = "NanumGothicBold.ttf"
     if not os.path.exists(bold_path): bold_path = font_path
     pdfmetrics.registerFont(TTFont('NanumGothic', font_path))
     pdfmetrics.registerFont(TTFont('NanumGothicBold', bold_path))
@@ -223,7 +266,7 @@ if submitted:
                 c_ana, c_lea, c_com, c_cre, c_det = [80, 70, 75, 65, 60]
                 report_content = raw_response
             
-            # 차트 이미지 생성
+            # 차트 이미지 생성 (Matplotlib 전환 완료)
             chart1_path, chart2_path, chart3_path = "c1.png", "c2.png", "c3.png"
             create_radar_chart([e1, e2, e3, e4, e5, e6, e7, e8, e9], chart1_path)
             create_big5_chart([b_ext, b_agr, b_con, b_neu, b_ope], chart2_path)
