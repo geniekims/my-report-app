@@ -33,12 +33,12 @@ st.markdown("""
 
 st.markdown("<h1 style='text-align: center; color: #2B4C7E; background-color:#E9EEF5; padding:20px; border-radius:8px;'>심층 역량 및 직무 적합도 평가 보고서</h1>", unsafe_allow_html=True)
 
-# 2. 사용자 입력 폼
+# 2. 사용자 입력 폼 (예시: 홍길동)
 with st.form("user_input_form"):
     st.markdown("### 👤 기본 프로필 및 심리 성향 진단")
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1: 
-        name = st.text_input("성명", placeholder="예: 홍길동")
+        name = st.text_input("성명", value="홍길동", placeholder="예: 홍길동")
     with col2: 
         birth = st.date_input(
             "생년월일", 
@@ -58,7 +58,7 @@ with st.form("user_input_form"):
     with col4: 
         mbti = st.selectbox("MBTI", mbti_list)
     with col5: 
-        job = st.text_input("직무 / 전공", placeholder="예: 생산직")
+        job = st.text_input("직무 / 전공", value="생산직", placeholder="예: 생산직")
     
     st.markdown("---")
     st.markdown("### 📊 다차원 내면 동기 척도 (0~20점)")
@@ -78,11 +78,10 @@ with st.form("user_input_form"):
         e6 = st.number_input("책임 및 안정 지향", 0, 20, 13)
         e9 = st.number_input("조화 및 수용 지향", 0, 20, 9)
 
-    submitted = st.form_submit_button("A4 2페이지 분량 종합 평가 보고서 생성", use_container_width=True)
+    submitted = st.form_submit_button("종합 평가 보고서 생성", use_container_width=True)
 
 # 별표(**) 기호를 깔끔한 HTML 태그로 변환하는 함수
 def clean_markdown_text(text):
-    # **제목**: 내용 형태를 <b>제목</b>: 내용으로 변환
     text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
     return text
 
@@ -104,7 +103,7 @@ def create_bar_drawing(title, categories, scores, max_val=100):
         y -= 20
     return d
 
-# 4. PDF 생성 함수
+# 4. PDF 생성 함수 (빈공간 유발하는 강제 PageBreak 제거)
 def create_pdf(text, user_name, motiv_scores, big5_scores, sw_scores):
     filename = f"{user_name}_Assessment_Report.pdf"
     doc = SimpleDocTemplate(filename, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=25, bottomMargin=25)
@@ -152,8 +151,7 @@ def create_pdf(text, user_name, motiv_scores, big5_scores, sw_scores):
         line = line.strip()
         if not line: continue
         
-        if line.startswith('## 심층 요약표') or line.startswith('## Master Action Plan'):
-            story.append(PageBreak()) 
+        # 강제 페이지 넘김(PageBreak) 제거하여 빈공간 발생 방지
             
         if line.startswith('|'):
             if '---' in line: continue
@@ -211,7 +209,7 @@ if submitted:
             system_prompt = """
             # ROLE: 글로벌 수석 커리어 컨설턴트 및 조직 심리 전략가
             # RULES:
-            1. 분량 규정: 반드시 A4 2페이지 분량이 꽉 찰 수 있도록 각 하위 섹션마다 충분하고 구체적으로 작성할 것.
+            1. 분량 규정: 각 하위 섹션마다 충분하고 구체적으로 작성할 것.
             2. 데이터 복합 유추: 제공된 MBTI, 생년월일, 혈액형, 내면 동기 점수 9개를 입체적으로 분석하여, 
                - 첫 번째 줄: 성격 5요인 점수 5개 (외향, 호감, 성실, 정서안정, 개방 / 0~100점)
                - 두 번째 줄: 직무 역량 점수 5개 (기획분석, 추진리더십, 협업소통, 창의문제해결, 위기관리 / 0~100점)
@@ -265,9 +263,9 @@ if submitted:
                 sw_scores = [80, 70, 75, 65, 60]
                 report_content = raw_response
             
-            st.success("✅ 불필요한 별표 기호가 제거되고 웹사이트 및 PDF에 동일하게 반영되었습니다.")
+            st.success("✅ 빈공간 없이 연속적으로 정돈된 종합 보고서가 생성되었습니다.")
             
-            # 웹 화면에 동일한 결과 출력 (별표 기호를 HTML 태그로 깔끔하게 치환하여 노출)
+            # 웹 화면에 동일한 결과 출력
             st.markdown("<div class='report-box'>", unsafe_allow_html=True)
             for line in report_content.split('\n'):
                 line = line.strip()
@@ -284,4 +282,4 @@ if submitted:
             # PDF 파일 생성 및 다운로드 버튼 제공
             pdf_file = create_pdf(report_content, name, [e1, e2, e3, e4, e5, e6, e7, e8, e9], big5_scores, sw_scores)
             with open(pdf_file, "rb") as f:
-                st.download_button("📕 신용평가형 2Page PDF 보고서 다운로드", data=f, file_name=pdf_file, mime="application/pdf", use_container_width=True)
+                st.download_button("📕 PDF 보고서 다운로드", data=f, file_name=pdf_file, mime="application/pdf", use_container_width=True)
