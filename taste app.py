@@ -2,7 +2,7 @@ import streamlit as st
 from openai import OpenAI
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
-from reportlab.graphics.shapes import Drawing, Rect, String
+from reportlab.graphics.shapes import Drawing, Rect, String, Circle, Line, Polygon
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
@@ -10,6 +10,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import os
 import datetime
+import math
 import re
 
 # 1. 페이지 설정 및 프리미엄 UI 스타일
@@ -40,32 +41,22 @@ st.markdown("""
 st.markdown("""
     <div style='background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%); padding: 30px; border-radius: 12px; text-align: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
         <h1 style='color: white; margin-bottom: 10px; font-size: 28px;'>Executive Intelligence Report</h1>
-        <p style='color: #94A3B8; font-size: 15px; margin: 0;'>다차원 심리 기질 및 역량 진단 전문 프리미엄 분석 솔루션</p>
+        <p style='color: #94A3B8; font-size: 15px; margin: 0;'>다차원 심리 기질 및 9원 성향 분석 전문 솔루션</p>
     </div>
 """, unsafe_allow_html=True)
 
-# 2. 사용자 입력 폼 (기존 폼 형태 유지)
+# 2. 사용자 입력 폼
 with st.form("user_input_form"):
     st.markdown("### 👤 기본 프로필 및 심리 성향 진단")
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1: 
         name = st.text_input("성명", value="홍길동", placeholder="예: 홍길동")
     with col2: 
-        birth = st.date_input(
-            "생년월일", 
-            value=datetime.date(2000, 1, 1), 
-            min_value=datetime.date(1950, 1, 1), 
-            max_value=datetime.date.today()
-        )
+        birth = st.date_input("생년월일", value=datetime.date(2000, 1, 1), min_value=datetime.date(1950, 1, 1), max_value=datetime.date.today())
     with col3: 
         blood_type = st.selectbox("혈액형", ["A형", "B형", "O형", "AB형"])
     
-    mbti_list = [
-        "ISTJ", "ISFJ", "INFJ", "INTJ", 
-        "ISTP", "ISFP", "INFP", "INTP", 
-        "ESTP", "ESFP", "ENFP", "ENTP", 
-        "ESTJ", "ESFJ", "ENFJ", "ENTJ"
-    ]
+    mbti_list = ["ISTJ", "ISFJ", "INFJ", "INTJ", "ISTP", "ISFP", "INFP", "INTP", "ESTP", "ESFP", "ENFP", "ENTP", "ESTJ", "ESFJ", "ENFJ", "ENTJ"]
     with col4: 
         mbti = st.selectbox("MBTI", mbti_list)
     with col5: 
@@ -95,13 +86,44 @@ def clean_markdown_text(text):
     text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
     return text
 
-# 3. 모던 게이지 바 도형 생성 함수 (일반 지표용)
-def create_modern_gauge_drawing(title, definition, score, low_desc, high_desc):
-    d = Drawing(535, 52)
-    d.add(Rect(0, 0, 535, 52, fillColor=colors.HexColor('#F8FAFC'), strokeColor=colors.HexColor('#CBD5E1'), strokeWidth=0.8, rx=5, ry=5))
+# 3. 9원 성향 분석 원형 다이어그램 생성 함수 (첫 번째 참고 이미지 구현)
+def create_enneagram_polygon_drawing():
+    d = Drawing(535, 140)
+    d.add(Rect(0, 0, 535, 140, fillColor=colors.HexColor('#F8FAFC'), strokeColor=colors.HexColor('#CBD5E1'), strokeWidth=0.8, rx=6, ry=6))
     
-    d.add(String(12, 38, title, fontName='NanumGothicBold', fontSize=9.5, fillColor=colors.HexColor('#1E293B')))
-    d.add(String(135, 39, f"[{definition}]", fontName='NanumGothic', fontSize=7.5, fillColor=colors.HexColor('#64748B')))
+    d.add(String(15, 122, "9원 성향 분석 모델 및 내면 연결 다이어그램", fontName='NanumGothicBold', fontSize=10, fillColor=colors.HexColor('#1E293B')))
+    
+    cx, cy, r = 435, 70, 52
+    d.add(Circle(cx, cy, r, fillColor=colors.HexColor('#FFFFFF'), strokeColor=colors.HexColor('#1E3A8A'), strokeWidth=1.5))
+    
+    points = {}
+    for i in range(1, 10):
+        angle = math.radians(90 - (i - 1) * 40)
+        x = cx + r * math.cos(angle)
+        y = cy + r * math.sin(angle)
+        points[i] = (x, y)
+        d.add(Circle(x, y, 3.5, fillColor=colors.HexColor('#3B82F6'), strokeColor=colors.white, strokeWidth=0.5))
+    
+    ennea_lines = [(1, 4), (4, 2), (2, 8), (8, 5), (5, 7), (7, 1), (3, 6), (6, 9), (9, 3)]
+    for p1, p2 in ennea_lines:
+        if p1 in points and p2 in points:
+            d.add(Line(points[p1][0], points[p1][1], points[p2][0], points[p2][1], strokeColor=colors.HexColor('#EF4444'), strokeWidth=0.9))
+
+    d.add(String(20, 100, "• 본능 중심 유형 (1/8/9번): 완벽성, 도전, 평화 및 안정 지향 기질", fontName='NanumGothic', fontSize=8, fillColor=colors.HexColor('#334155')))
+    d.add(String(20, 82, "• 감정 중심 유형 (2/3/4번): 조력, 목표성취, 독창적 예술 지향 기질", fontName='NanumGothic', fontSize=8, fillColor=colors.HexColor('#334155')))
+    d.add(String(20, 64, "• 사고 중심 유형 (5/6/7번): 탐구분석, 성실책임, 열정모험 지향 기질", fontName='NanumGothic', fontSize=8, fillColor=colors.HexColor('#334155')))
+    d.add(String(20, 40, "※ 9원 성향 분석 모델은 고유의 행동 패턴과 스트레스 대응 및 성장 방향성을", fontName='NanumGothicBold', fontSize=7.5, fillColor=colors.HexColor('#1E3A8A')))
+    d.add(String(20, 26, "   동시에 분석하여 입체적인 행동 패턴 예측과 자기 성찰 가이드를 제공합니다.", fontName='NanumGothic', fontSize=7.5, fillColor=colors.HexColor('#64748B')))
+    
+    return d
+
+# 4. 모던 게이지 바 도형 생성 함수
+def create_modern_gauge_drawing(title, definition, score, low_desc, high_desc):
+    d = Drawing(535, 46)
+    d.add(Rect(0, 0, 535, 46, fillColor=colors.HexColor('#F8FAFC'), strokeColor=colors.HexColor('#CBD5E1'), strokeWidth=0.8, rx=5, ry=5))
+    
+    d.add(String(12, 33, title, fontName='NanumGothicBold', fontSize=9, fillColor=colors.HexColor('#1E293B')))
+    d.add(String(135, 34, f"[{definition}]", fontName='NanumGothic', fontSize=7.5, fillColor=colors.HexColor('#64748B')))
     
     normalized_score = int((score / 20.0) * 100)
     grade = "중간 (M)"
@@ -113,34 +135,21 @@ def create_modern_gauge_drawing(title, definition, score, low_desc, high_desc):
         grade = "높음 (H)"
         badge_color = colors.HexColor('#10B981')
 
-    d.add(String(445, 38, f"환산점수: {normalized_score}점 [{grade}]", fontName='NanumGothicBold', fontSize=8.5, fillColor=badge_color))
+    d.add(String(445, 33, f"환산점수: {normalized_score}점 [{grade}]", fontName='NanumGothicBold', fontSize=8, fillColor=badge_color))
     
-    d.add(Rect(135, 18, 280, 7, fillColor=colors.HexColor('#E2E8F0'), strokeColor=None, rx=3.5, ry=3.5))
+    d.add(Rect(135, 15, 280, 6, fillColor=colors.HexColor('#E2E8F0'), strokeColor=None, rx=3, ry=3))
     bar_w = (normalized_score / 100.0) * 280
-    d.add(Rect(135, 18, bar_w, 7, fillColor=badge_color, strokeColor=None, rx=3.5, ry=3.5))
+    d.add(Rect(135, 15, bar_w, 6, fillColor=badge_color, strokeColor=None, rx=3, ry=3))
     
-    d.add(String(12, 6, f"• 낮음 특성: {low_desc}", fontName='NanumGothic', fontSize=7, fillColor=colors.HexColor('#64748B')))
-    d.add(String(300, 6, f"• 높음 특성: {high_desc}", fontName='NanumGothic', fontSize=7, fillColor=colors.HexColor('#64748B')))
-    
-    return d
-
-# 4. 에니어그램 핵심 성향 도표 생성 함수 (신규 추가)
-def create_enneagram_gauge_drawing(enneagram_type, core_motivation, integration_stress):
-    d = Drawing(535, 45)
-    d.add(Rect(0, 0, 535, 45, fillColor=colors.HexColor('#F8FAFC'), strokeColor=colors.HexColor('#CBD5E1'), strokeWidth=0.8, rx=5, ry=5))
-    
-    d.add(String(12, 31, f"에니어그램 핵심 유형: Type {enneagram_type}", fontName='NanumGothicBold', fontSize=9.5, fillColor=colors.HexColor('#1E3A8A')))
-    d.add(String(165, 32, f"[핵심 동기 및 집착: {core_motivation}]", fontName='NanumGothic', fontSize=7.5, fillColor=colors.HexColor('#64748B')))
-    
-    d.add(String(12, 12, f"• 통합(성장) 방향: {integration_stress.split('|')[0]}", fontName='NanumGothic', fontSize=7.5, fillColor=colors.HexColor('#10B981')))
-    d.add(String(280, 12, f"• 분열(스트레스) 방향: {integration_stress.split('|')[1]}", fontName='NanumGothic', fontSize=7.5, fillColor=colors.HexColor('#EF4444')))
+    d.add(String(12, 5, f"• 낮음 특성: {low_desc}", fontName='NanumGothic', fontSize=6.8, fillColor=colors.HexColor('#64748B')))
+    d.add(String(300, 5, f"• 높음 특성: {high_desc}", fontName='NanumGothic', fontSize=6.8, fillColor=colors.HexColor('#64748B')))
     
     return d
 
 # 5. 2페이지 고정형 PDF 생성 함수
-def create_pdf(text_page1, text_page2, user_name, motiv_scores, ennea_info):
+def create_pdf(text_page1, text_page2, user_name, motiv_scores):
     filename = f"{user_name}_Executive_Report.pdf"
-    doc = SimpleDocTemplate(filename, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=22, bottomMargin=22)
+    doc = SimpleDocTemplate(filename, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=20, bottomMargin=20)
     
     font_path = "NanumGothic.ttf"
     bold_path = "NanumGothicBold.ttf"
@@ -152,77 +161,76 @@ def create_pdf(text_page1, text_page2, user_name, motiv_scores, ennea_info):
     except:
         pass
     
-    title_style = ParagraphStyle('MainTitle', fontName='NanumGothicBold', fontSize=12, textColor=colors.white, alignment=TA_CENTER)
-    header_style = ParagraphStyle('SectionHeader', fontName='NanumGothicBold', fontSize=9.5, textColor=colors.white, alignment=TA_CENTER)
-    sub_style = ParagraphStyle('SubHeader', fontName='NanumGothicBold', fontSize=8, textColor=colors.HexColor('#1E3A8A'), spaceBefore=3, spaceAfter=1)
-    body_style = ParagraphStyle('Body', fontName='NanumGothic', fontSize=7.2, leading=10, textColor=colors.HexColor('#334155'))
-    comment_style = ParagraphStyle('Comment', fontName='NanumGothic', fontSize=7.2, leading=10, textColor=colors.HexColor('#1E3A8A'))
-    th_style = ParagraphStyle('TableHeader', fontName='NanumGothicBold', fontSize=7.2, alignment=TA_CENTER, textColor=colors.HexColor('#1E293B'))
-    td_style = ParagraphStyle('TableData', fontName='NanumGothic', fontSize=7, leading=9.5, alignment=TA_LEFT)
+    title_style = ParagraphStyle('MainTitle', fontName='NanumGothicBold', fontSize=11, textColor=colors.white, alignment=TA_CENTER)
+    header_style = ParagraphStyle('SectionHeader', fontName='NanumGothicBold', fontSize=9, textColor=colors.white, alignment=TA_CENTER)
+    sub_style = ParagraphStyle('SubHeader', fontName='NanumGothicBold', fontSize=7.5, textColor=colors.HexColor('#1E3A8A'), spaceBefore=2, spaceAfter=1)
+    body_style = ParagraphStyle('Body', fontName='NanumGothic', fontSize=7, leading=9.5, textColor=colors.HexColor('#334155'))
+    comment_style = ParagraphStyle('Comment', fontName='NanumGothic', fontSize=7, leading=9.5, textColor=colors.HexColor('#1E3A8A'))
+    th_style = ParagraphStyle('TableHeader', fontName='NanumGothicBold', fontSize=7, alignment=TA_CENTER, textColor=colors.HexColor('#1E293B'))
+    td_style = ParagraphStyle('TableData', fontName='NanumGothic', fontSize=6.8, leading=9, alignment=TA_LEFT)
 
     story = []
     
     # -------------------------------------------------------------------------
-    # [PAGE 1] 기질, 심리 동기 및 에니어그램 도표 진단 결과
+    # [PAGE 1] 9원 성향 분석 모델 및 내면 동기 진단 결과
     # -------------------------------------------------------------------------
-    banner1 = Table([[Paragraph(f"<b>EXECUTIVE INTELLIGENCE REPORT (1/2) &nbsp;|&nbsp; {user_name}</b>", title_style)]], colWidths=[535], rowHeights=[22])
+    banner1 = Table([[Paragraph(f"<b>EXECUTIVE INTELLIGENCE REPORT (1/2) &nbsp;|&nbsp; {user_name}</b>", title_style)]], colWidths=[535], rowHeights=[20])
     banner1.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#0F172A')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,-1), 'CENTER')]))
     story.append(banner1)
     story.append(Spacer(1, 3))
     
-    # 에니어그램 도표 추가 배치
-    story.append(create_enneagram_gauge_drawing(ennea_info[0], ennea_info[1], ennea_info[2]))
+    # 9원 성향 분석 원형 다이어그램 추가
+    story.append(create_enneagram_polygon_drawing())
     story.append(Spacer(1, 2))
 
     story.append(create_modern_gauge_drawing("1. 완벽성 및 원칙 지향", "규율 준수 및 세부 사항 통제", motiv_scores[0], "유연하나 실수가 잦음", "철저한 기준 준수, 정교함"))
-    story.append(Spacer(1, 2))
+    story.append(Spacer(1, 1.5))
     story.append(create_modern_gauge_drawing("2. 조력 및 공감 지향", "타인 감정 수용 및 협조 성향", motiv_scores[1], "독립적 선호, 타인 무관심", "뛰어난 공감, 화합 주도"))
-    story.append(Spacer(1, 2))
+    story.append(Spacer(1, 1.5))
     story.append(create_modern_gauge_drawing("3. 성취 및 목표 지향", "결과물 창출과 높은 성취 집념", motiv_scores[2], "안정 위주, 도전 의지 부족", "강한 목표 달성력, 추진력"))
-    story.append(Spacer(1, 2))
+    story.append(Spacer(1, 1.5))
     story.append(create_modern_gauge_drawing("4. 탐구 및 분석 지향", "원인 분석 및 지적 호기심의 깊이", motiv_scores[3], "표피적 이해에 머무름", "구조 분석 및 본질 통찰"))
-    story.append(Spacer(1, 2))
+    story.append(Spacer(1, 1.5))
     story.append(create_modern_gauge_drawing("5. 열정 및 비전 지향", "미래 가치 추구 및 변화 몰입도", motiv_scores[4], "현실 안주 성향", "혁신적 아이디어, 높은 몰입"))
-    story.append(Spacer(1, 3))
+    story.append(Spacer(1, 2))
     
-    # 도표 하단 종합 분석 코멘트 박스
-    comment_text = "<b>[전문가 진단 코멘트]:</b> 에니어그램 성향 및 5대 내면 동기 지표를 종합한 결과, 대상자는 높은 원칙 준수 성향과 치밀한 분석력을 겸비하고 있어 고난도 실무 환경에서 탁월한 안정성을 발휘합니다. 통합 방향의 성장을 위해 유연한 수용 태도를 병행하는 것이 효과적입니다."
+    comment_text = "<b>[전문가 진단 코멘트]:</b> 9원 성향 분석 모델 및 5대 내면 동기 지표를 종합한 결과, 대상자는 원칙 준수와 분석적 사고에서 매우 높은 잠재력을 보유하고 있습니다. 스트레스 상황에서는 유연한 수용 태도를 활성화하여 안정적인 업무 수행력을 유지하는 것이 권장됩니다."
     comment_table = Table([[Paragraph(comment_text, comment_style)]], colWidths=[535])
     comment_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#EFF6FF')),
         ('BOX', (0,0), (-1,-1), 0.8, colors.HexColor('#BFDBFE')),
-        ('TOPPADDING', (0,0), (-1,-1), 3), ('BOTTOMPADDING', (0,0), (-1,-1), 3),
+        ('TOPPADDING', (0,0), (-1,-1), 2.5), ('BOTTOMPADDING', (0,0), (-1,-1), 2.5),
         ('LEFTPADDING', (0,0), (-1,-1), 5), ('RIGHTPADDING', (0,0), (-1,-1), 5),
     ]))
     story.append(comment_table)
-    story.append(Spacer(1, 3))
+    story.append(Spacer(1, 2))
     
     for line in text_page1.split('\n'):
         line = line.strip()
         if not line: continue
         if line.startswith('## '):
-            sec = Table([[Paragraph(line[3:], header_style)]], colWidths=[535], rowHeights=[15])
+            sec = Table([[Paragraph(line[3:], header_style)]], colWidths=[535], rowHeights=[14])
             sec.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#1E3A8A')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE')]))
             story.append(sec)
-            story.append(Spacer(1, 2))
+            story.append(Spacer(1, 1.5))
         elif line.startswith('### '):
             story.append(Paragraph(clean_markdown_text(line[4:]), sub_style))
         elif line.startswith('- '):
             story.append(Paragraph(f"• {clean_markdown_text(line[2:])}", body_style))
-            story.append(Spacer(1, 1))
+            story.append(Spacer(1, 0.5))
         else:
             story.append(Paragraph(clean_markdown_text(line), body_style))
-            story.append(Spacer(1, 1))
+            story.append(Spacer(1, 0.5))
 
     story.append(PageBreak())
 
     # -------------------------------------------------------------------------
     # [PAGE 2] 마스터 액션 플랜 및 전략 과제표
     # -------------------------------------------------------------------------
-    banner2 = Table([[Paragraph(f"<b>MASTER ACTION PLAN & STRATEGY (2/2) &nbsp;|&nbsp; {user_name}</b>", title_style)]], colWidths=[535], rowHeights=[22])
+    banner2 = Table([[Paragraph(f"<b>MASTER ACTION PLAN & STRATEGY (2/2) &nbsp;|&nbsp; {user_name}</b>", title_style)]], colWidths=[535], rowHeights=[20])
     banner2.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#0F172A')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,-1), 'CENTER')]))
     story.append(banner2)
-    story.append(Spacer(1, 4))
+    story.append(Spacer(1, 3))
 
     table_data = []
     for line in text_page2.split('\n'):
@@ -243,46 +251,45 @@ def create_pdf(text_page1, text_page2, user_name, motiv_scores, ennea_info):
                 ('ALIGN', (0,0), (-1,-1), 'CENTER'),
                 ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
                 ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#CBD5E1')),
-                ('TOPPADDING', (0,0), (-1,-1), 3), ('BOTTOMPADDING', (0,0), (-1,-1), 3),
+                ('TOPPADDING', (0,0), (-1,-1), 2.5), ('BOTTOMPADDING', (0,0), (-1,-1), 2.5),
                 ('BACKGROUND', (0,1), (0,-1), colors.HexColor('#F8FAFC')),
             ]))
             story.append(t)
-            story.append(Spacer(1, 3))
+            story.append(Spacer(1, 2))
             
-            # 표 하단 전용 인사이트 코멘트 박스
             table_comment = "<b>[전략 실행 가이드 코멘트]:</b> 상단 마스터 플랜 과제표는 단기적 역량 보완과 장기적 리더십 확장을 동시에 달성할 수 있도록 설계되었습니다. 주간 단위 점검과 피드백 루프를 통해 실행력을 극대화하세요."
             t_comment_box = Table([[Paragraph(table_comment, comment_style)]], colWidths=[535])
             t_comment_box.setStyle(TableStyle([
                 ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#EFF6FF')),
                 ('BOX', (0,0), (-1,-1), 0.8, colors.HexColor('#BFDBFE')),
-                ('TOPPADDING', (0,0), (-1,-1), 3), ('BOTTOMPADDING', (0,0), (-1,-1), 3),
+                ('TOPPADDING', (0,0), (-1,-1), 2.5), ('BOTTOMPADDING', (0,0), (-1,-1), 2.5),
                 ('LEFTPADDING', (0,0), (-1,-1), 5), ('RIGHTPADDING', (0,0), (-1,-1), 5),
             ]))
             story.append(t_comment_box)
-            story.append(Spacer(1, 3))
+            story.append(Spacer(1, 2))
             table_data = []
 
         if line.startswith('## '):
-            sec2 = Table([[Paragraph(line[3:], header_style)]], colWidths=[535], rowHeights=[15])
+            sec2 = Table([[Paragraph(line[3:], header_style)]], colWidths=[535], rowHeights=[14])
             sec2.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#1E3A8A')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE')]))
             story.append(sec2)
-            story.append(Spacer(1, 2))
+            story.append(Spacer(1, 1.5))
         elif line.startswith('### '):
             story.append(Paragraph(clean_markdown_text(line[4:]), sub_style))
         elif line.startswith('- '):
             story.append(Paragraph(f"• {clean_markdown_text(line[2:])}", body_style))
-            story.append(Spacer(1, 1))
+            story.append(Spacer(1, 0.5))
         else:
             story.append(Paragraph(clean_markdown_text(line), body_style))
-            story.append(Spacer(1, 1))
+            story.append(Spacer(1, 0.5))
             
     if table_data:
         t = Table(table_data, colWidths=[85, 175, 275])
         t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor('#E2E8F0')), ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#CBD5E1')), ('BACKGROUND', (0,1), (0,-1), colors.HexColor('#F8FAFC'))]))
         story.append(t)
-        story.append(Spacer(1, 3))
+        story.append(Spacer(1, 2))
         t_comment_box = Table([[Paragraph("<b>[전략 실행 가이드 코멘트]:</b> 상단 마스터 플랜 과제표는 단기적 역량 보완과 장기적 리더십 확장을 동시에 달성할 수 있도록 설계되었습니다.", comment_style)]], colWidths=[535])
-        t_comment_box.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#EFF6FF')), ('BOX', (0,0), (-1,-1), 0.8, colors.HexColor('#BFDBFE')), ('TOPPADDING', (0,0), (-1,-1), 3), ('BOTTOMPADDING', (0,0), (-1,-1), 3)]))
+        t_comment_box.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#EFF6FF')), ('BOX', (0,0), (-1,-1), 0.8, colors.HexColor('#BFDBFE')), ('TOPPADDING', (0,0), (-1,-1), 2.5), ('BOTTOMPADDING', (0,0), (-1,-1), 2.5)]))
         story.append(t_comment_box)
 
     doc.build(story)
@@ -293,13 +300,13 @@ if submitted:
     if not name: 
         st.warning("성명을 입력해주세요.")
     else:
-        with st.spinner("💎 에니어그램 도표 및 심층 분석 코멘트가 포함된 프리미엄 보고서를 생성 중입니다..."):
+        with st.spinner("💎 9원 성향 분석 다이어그램과 상세 전략이 포함된 프리미엄 보고서를 생성 중입니다..."):
             client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
             
             system_prompt = """
             # ROLE: 글로벌 최고 경영 컨설턴트 및 프리미엄 조직 심리 전략가
             # RULES & CONSTRAINTS:
-            1. 절대 금지 사항: '사주', '명리', '별자리', 'MBTI' 등 진단 출처 명칭 직접 언급 금지. 전문 비즈니스/심리 용어 사용.
+            1. 절대 금지 사항: 특정 진단 검사 명칭('사주', '명리', '별자리', 'MBTI', '에니어그램' 등) 직접 언급 금지. 전문 비즈니스 및 조직 심리 용어만 사용.
             2. 내용 풍성화 및 상세화: 빈칸과 여백이 남지 않도록 모든 항목별로 매우 상세하고 깊이 있는 문장으로 가득 채워 작성할 것.
             3. 마스터플랜 다양화: [인지/사유 고도화], [소통/관계 협업], [실무 실행력 강화], [자기관리/스트레스 루틴] 등 다채로운 영역으로 구체화할 것.
             4. 출력 형식: 반드시 아래의 구분자(`---PAGE_SPLIT---`)를 기준으로 페이지 1과 페이지 2 내용으로 나누어 출력할 것.
@@ -348,21 +355,18 @@ if submitted:
                 page1_text = parts[0]
                 page2_text = "## 역량 다각화" + parts[1] if len(parts) > 1 else raw_content
             
-            st.success("💎 에니어그램 도표와 풍성한 분석 내용이 포함된 2페이지 통합 보고서가 완성되었습니다.")
+            st.success("💎 9원 성향 분석 모델 다이어그램이 포함된 프리미엄 보고서가 완성되었습니다.")
             
             # 웹 화면 출력
             st.markdown("<div class='report-box'>", unsafe_allow_html=True)
-            st.markdown("### [PAGE 1] 기질, 에니어그램 및 심리 동기 진단 결과")
+            st.markdown("### [PAGE 1] 9원 성향 분석 및 심리 동기 진단 결과")
             st.markdown(page1_text)
             st.markdown("---")
             st.markdown("### [PAGE 2] 인문교양·토론 및 마스터 액션 플랜")
             st.markdown(page2_text)
             st.markdown("</div>", unsafe_allow_html=True)
             
-            # 에니어그램 더미 데이터 (유형 1번 기준 예시: 통합 7번, 분열 4번)
-            ennea_mock_info = ("Type 1 (개혁가형)", "완벽성, 올바름, 원칙 추구", "Type 7 (열정·낙천) | Type 4 (감정·개인주의)")
-            
             # PDF 다운로드 버튼
-            pdf_file = create_pdf(page1_text, page2_text, name, [e1, e2, e3, e4, e7], ennea_mock_info)
+            pdf_file = create_pdf(page1_text, page2_text, name, [e1, e2, e3, e4, e7])
             with open(pdf_file, "rb") as f:
                 st.download_button("📕 프리미엄 PDF 보고서 다운로드", data=f, file_name=pdf_file, mime="application/pdf", use_container_width=True)
