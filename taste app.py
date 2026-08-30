@@ -5,35 +5,50 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.graphics.shapes import Drawing, Rect, String
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import os
 import datetime
 import re
 
-# 1. 페이지 설정 및 UI 스타일
-st.set_page_config(page_title="Executive Intelligence Report", page_icon="💼", layout="wide")
+# 1. 페이지 설정 및 프리미엄 UI 스타일 (CSS 개선)
+st.set_page_config(page_title="Executive Intelligence Report", page_icon="💎", layout="wide")
 
 st.markdown("""
     <style>
-    .main { background-color: #F8FAFC; }
-    h1, h2, h3 { color: #2B4C7E; font-weight: bold; }
+    .main { background-color: #F1F5F9; }
+    h1, h2, h3 { color: #0F172A; font-family: 'Helvetica Neue', sans-serif; }
     .stButton>button {
-        background-color: #2B4C7E; color: white; border-radius: 4px;
-        font-weight: 600; border: none; padding: 0.6rem 1.2rem;
+        background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
+        color: white; border-radius: 6px; font-weight: 600; border: none; 
+        padding: 0.7rem 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
     }
-    .stButton>button:hover { background-color: #1F385C; }
+    .stButton>button:hover { 
+        background: linear-gradient(135deg, #1E40AF 0%, #2563EB 100%);
+        box-shadow: 0 6px 8px -1px rgba(0,0,0,0.15);
+    }
     .report-box {
-        background-color: white; padding: 30px; border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px;
+        background-color: white; padding: 40px; border-radius: 12px;
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -4px rgba(0,0,0,0.05);
+        margin-top: 20px; border: 1px solid #E2E8F0;
+    }
+    .card-container {
+        background-color: #F8FAFC; padding: 20px; border-radius: 8px;
+        border-left: 4px solid #3B82F6; margin-bottom: 15px;
     }
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1 style='text-align: center; color: #2B4C7E; background-color:#E9EEF5; padding:20px; border-radius:8px;'>심층 역량 및 직무 적합도 평가 보고서</h1>", unsafe_allow_html=True)
+st.markdown("""
+    <div style='background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%); padding: 30px; border-radius: 12px; text-align: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
+        <h1 style='color: white; margin-bottom: 10px; font-size: 28px;'>Executive Intelligence Report</h1>
+        <p style='color: #94A3B8; font-size: 15px; margin: 0;'>다차원 심리 기질 및 역량 진단 전문 프리미엄 분석 솔루션</p>
+    </div>
+""", unsafe_allow_html=True)
 
-# 2. 사용자 입력 폼 (기존 입력 폼 유지)
+# 2. 사용자 입력 폼 (기존 입력 폼 형태 완벽 유지)
 with st.form("user_input_form"):
     st.markdown("### 👤 기본 프로필 및 심리 성향 진단")
     col1, col2, col3, col4, col5 = st.columns(5)
@@ -78,47 +93,49 @@ with st.form("user_input_form"):
         e6 = st.number_input("책임 및 안정 지향", 0, 20, 13)
         e9 = st.number_input("조화 및 수용 지향", 0, 20, 9)
 
-    submitted = st.form_submit_button("종합 평가 보고서 생성", use_container_width=True)
+    submitted = st.form_submit_button("프리미엄 종합 평가 보고서 생성", use_container_width=True)
 
 # 마크다운 볼드(**) 기호를 HTML 태그로 변환하는 함수
 def clean_markdown_text(text):
     text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
     return text
 
-# 3. TCI 스타일 가로 게이지 바 도형 생성 함수 (단어 정의 및 점수 해설 포함)
-def create_tci_gauge_drawing(title, definition, score, low_desc, high_desc):
-    d = Drawing(535, 65)
-    d.add(Rect(0, 0, 535, 65, fillColor=colors.HexColor('#F8FAFC'), strokeColor=colors.HexColor('#B4C6E7'), strokeWidth=0.5, rx=4, ry=4))
+# 3. 세련된 모던 게이지 바 도형 생성 함수 (TCI 스타일 발전형)
+def create_modern_gauge_drawing(title, definition, score, low_desc, high_desc):
+    d = Drawing(535, 60)
+    # 카드형 배경 박스 (모서리 곡률 및 미려한 테두리)
+    d.add(Rect(0, 0, 535, 60, fillColor=colors.HexColor('#F8FAFC'), strokeColor=colors.HexColor('#CBD5E1'), strokeWidth=0.8, rx=6, ry=6))
     
-    d.add(String(12, 48, title, fontName='NanumGothicBold', fontSize=10, fillColor=colors.HexColor('#2B4C7E')))
-    d.add(String(130, 49, f"[{definition}]", fontName='NanumGothic', fontSize=8.5, fillColor=colors.HexColor('#555555')))
+    # 타이틀 및 정의
+    d.add(String(15, 43, title, fontName='NanumGothicBold', fontSize=10, fillColor=colors.HexColor('#1E293B')))
+    d.add(String(145, 44, f"[{definition}]", fontName='NanumGothic', fontSize=8, fillColor=colors.HexColor('#64748B')))
     
-    # 0~20점 척도를 100점 환산하여 등급 산출
     normalized_score = int((score / 20.0) * 100)
-    grade = "M (중간)"
-    badge_color = colors.HexColor('#4A70B0')
+    grade = "중간 (M)"
+    badge_color = colors.HexColor('#3B82F6') # 모던 블루
     if normalized_score <= 40:
-        grade = "L (낮음)"
-        badge_color = colors.HexColor('#D9534F')
+        grade = "낮음 (L)"
+        badge_color = colors.HexColor('#EF4444') # 세련된 레드
     elif normalized_score >= 76:
-        grade = "H (높음)"
-        badge_color = colors.HexColor('#28A745')
+        grade = "높음 (H)"
+        badge_color = colors.HexColor('#10B981') # 세련된 그린
 
-    d.add(String(440, 48, f"환산점수: {normalized_score}점 ({grade})", fontName='NanumGothicBold', fontSize=9, fillColor=badge_color))
+    d.add(String(445, 43, f"환산점수: {normalized_score}점 [{grade}]", fontName='NanumGothicBold', fontSize=9, fillColor=badge_color))
     
-    # 게이지 바 바탕
-    d.add(Rect(120, 22, 295, 10, fillColor=colors.HexColor('#E2E8F0'), strokeColor=None, rx=3, ry=3))
-    bar_w = (normalized_score / 100.0) * 295
-    d.add(Rect(120, 22, bar_w, 10, fillColor=badge_color, strokeColor=None, rx=3, ry=3))
+    # 게이지 바 트랙
+    d.add(Rect(135, 20, 280, 8, fillColor=colors.HexColor('#E2E8F0'), strokeColor=None, rx=4, ry=4))
+    bar_w = (normalized_score / 100.0) * 280
+    d.add(Rect(135, 20, bar_w, 8, fillColor=badge_color, strokeColor=None, rx=4, ry=4))
     
-    d.add(String(15, 8, f"낮음 특징: {low_desc}", fontName='NanumGothic', fontSize=7.5, fillColor=colors.HexColor('#666666')))
-    d.add(String(415, 8, f"높음 특징: {high_desc}", fontName='NanumGothic', fontSize=7.5, fillColor=colors.HexColor('#666666')))
+    # 하단 설명 레이블
+    d.add(String(15, 7, f"• 낮음 특성: {low_desc}", fontName='NanumGothic', fontSize=7.5, fillColor=colors.HexColor('#64748B')))
+    d.add(String(310, 7, f"• 높음 특성: {high_desc}", fontName='NanumGothic', fontSize=7.5, fillColor=colors.HexColor('#64748B')))
     
     return d
 
-# 4. 2페이지 고정형 PDF 생성 함수
+# 4. 세련된 2페이지 고정형 PDF 생성 함수
 def create_pdf(text_page1, text_page2, user_name, motiv_scores):
-    filename = f"{user_name}_Assessment_Report.pdf"
+    filename = f"{user_name}_Executive_Report.pdf"
     doc = SimpleDocTemplate(filename, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=25, bottomMargin=25)
     
     font_path = "NanumGothic.ttf"
@@ -131,43 +148,42 @@ def create_pdf(text_page1, text_page2, user_name, motiv_scores):
     except:
         pass
     
-    title_style = ParagraphStyle('MainTitle', fontName='NanumGothicBold', fontSize=14, textColor=colors.white, alignment=TA_CENTER)
-    header_style = ParagraphStyle('SectionHeader', fontName='NanumGothicBold', fontSize=10.5, textColor=colors.white, alignment=TA_CENTER)
-    sub_style = ParagraphStyle('SubHeader', fontName='NanumGothicBold', fontSize=9.5, textColor=colors.HexColor('#2B4C7E'), spaceBefore=4, spaceAfter=2)
-    body_style = ParagraphStyle('Body', fontName='NanumGothic', fontSize=8.5, leading=13, textColor=colors.HexColor('#333333'))
-    th_style = ParagraphStyle('TableHeader', fontName='NanumGothicBold', fontSize=8, alignment=TA_CENTER, textColor=colors.HexColor('#1F385C'))
-    td_style = ParagraphStyle('TableData', fontName='NanumGothic', fontSize=8, leading=11, alignment=TA_LEFT)
+    title_style = ParagraphStyle('MainTitle', fontName='NanumGothicBold', fontSize=13, textColor=colors.white, alignment=TA_CENTER)
+    header_style = ParagraphStyle('SectionHeader', fontName='NanumGothicBold', fontSize=10, textColor=colors.white, alignment=TA_CENTER)
+    sub_style = ParagraphStyle('SubHeader', fontName='NanumGothicBold', fontSize=9, textColor=colors.HexColor('#1E3A8A'), spaceBefore=5, spaceAfter=2)
+    body_style = ParagraphStyle('Body', fontName='NanumGothic', fontSize=8.2, leading=12.5, textColor=colors.HexColor('#334155'))
+    th_style = ParagraphStyle('TableHeader', fontName='NanumGothicBold', fontSize=7.8, alignment=TA_CENTER, textColor=colors.HexColor('#1E293B'))
+    td_style = ParagraphStyle('TableData', fontName='NanumGothic', fontSize=7.8, leading=11, alignment=TA_LEFT)
 
     story = []
     
     # -------------------------------------------------------------------------
-    # [PAGE 1] 기질 및 성격 진단 (TCI 스타일 게이지 바 5종 + 본문 1)
+    # [PAGE 1] 프리미엄 헤더 및 모던 게이지 바 5종 + 본문 1
     # -------------------------------------------------------------------------
-    banner1 = Table([[Paragraph(f"<b>심층 역량 및 직무 적합도 통합 평가 (1/2) | {user_name}</b>", title_style)]], colWidths=[535], rowHeights=[28])
-    banner1.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#2B4C7E')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,-1), 'CENTER')]))
+    banner1 = Table([[Paragraph(f"<b>EXECUTIVE INTELLIGENCE REPORT (1/2) &nbsp;|&nbsp; {user_name}</b>", title_style)]], colWidths=[535], rowHeights=[26])
+    banner1.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#0F172A')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,-1), 'CENTER')]))
     story.append(banner1)
     story.append(Spacer(1, 6))
     
-    # 내면 동기 지표를 활용한 TCI 스타일 가로 게이지 바 생성
-    story.append(create_tci_gauge_drawing("1. 완벽성 및 원칙 지향", "규율 준수 및 세부 사항에 대한 정밀 통제 능력", motiv_scores[0], "유연하나 실수가 잦을 수 있음", "철저한 기준 준수, 정교한 업무 처리"))
-    story.append(Spacer(1, 4))
-    story.append(create_tci_gauge_drawing("2. 조력 및 공감 지향", "타인의 감정 수용 및 조직 내 협조 성향", motiv_scores[1], "독립적 업무 선호, 타인 무관심", "뛰어난 대인관계 공감, 화합 주도"))
-    story.append(Spacer(1, 4))
-    story.append(create_tci_gauge_drawing("3. 성취 및 목표 지향", "결과물 창출을 위한 높은 성취 동기와 집념", motiv_scores[2], "안정 위주, 도전 의지 부족", "강한 목표 달성력, 탁월한 추진력"))
-    story.append(Spacer(1, 4))
-    story.append(create_tci_gauge_drawing("4. 탐구 및 분석 지향", "원인 분석 및 지적 호기심의 깊이", motiv_scores[3], "표피적 이해에 머무름", "깊이 있는 구조 분석 및 본질 통찰"))
-    story.append(Spacer(1, 4))
-    story.append(create_tci_gauge_drawing("5. 열정 및 비전 지향", "미래 지향적 가치 추구 및 변화 몰입도", motiv_scores[4], "현실 안주 성향", "혁신적 아이디어 발굴, 높은 몰입도"))
-    story.append(Spacer(1, 6))
+    story.append(create_modern_gauge_drawing("1. 완벽성 및 원칙 지향", "규율 준수 및 세부 사항 통제", motiv_scores[0], "유연하나 실수가 잦음", "철저한 기준 준수, 정교함"))
+    story.append(Spacer(1, 3))
+    story.append(create_modern_gauge_drawing("2. 조력 및 공감 지향", "타인 감정 수용 및 협조 성향", motiv_scores[1], "독립적 선호, 타인 무관심", "뛰어난 공감, 화합 주도"))
+    story.append(Spacer(1, 3))
+    story.append(create_modern_gauge_drawing("3. 성취 및 목표 지향", "결과물 창출과 높은 성취 집념", motiv_scores[2], "안정 위주, 도전 의지 부족", "강한 목표 달성력, 추진력"))
+    story.append(Spacer(1, 3))
+    story.append(create_modern_gauge_drawing("4. 탐구 및 분석 지향", "원인 분석 및 지적 호기심의 깊이", motiv_scores[3], "표피적 이해에 머무름", "구조 분석 및 본질 통찰"))
+    story.append(Spacer(1, 3))
+    story.append(create_modern_gauge_drawing("5. 열정 및 비전 지향", "미래 가치 추구 및 변화 몰입도", motiv_scores[4], "현실 안주 성향", "혁신적 아이디어, 높은 몰입"))
+    story.append(Spacer(1, 5))
     
     for line in text_page1.split('\n'):
         line = line.strip()
         if not line: continue
         if line.startswith('## '):
-            sec = Table([[Paragraph(line[3:], header_style)]], colWidths=[535], rowHeights=[20])
-            sec.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#4A70B0')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE')]))
+            sec = Table([[Paragraph(line[3:], header_style)]], colWidths=[535], rowHeights=[18])
+            sec.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#1E3A8A')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE')]))
             story.append(sec)
-            story.append(Spacer(1, 3))
+            story.append(Spacer(1, 2))
         elif line.startswith('### '):
             story.append(Paragraph(clean_markdown_text(line[4:]), sub_style))
         elif line.startswith('- '):
@@ -180,12 +196,12 @@ def create_pdf(text_page1, text_page2, user_name, motiv_scores):
     story.append(PageBreak())
 
     # -------------------------------------------------------------------------
-    # [PAGE 2] 심층 분석, 인문교양, 토론형 강의, 사유 고도화 및 액션 플랜
+    # [PAGE 2] 마스터 액션 플랜 및 표 디자인 개선
     # -------------------------------------------------------------------------
-    banner2 = Table([[Paragraph(f"<b>마스터 액션 플랜 및 심층 역량 보고서 (2/2) | {user_name}</b>", title_style)]], colWidths=[535], rowHeights=[28])
-    banner2.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#2B4C7E')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,-1), 'CENTER')]))
+    banner2 = Table([[Paragraph(f"<b>MASTER ACTION PLAN & STRATEGY (2/2) &nbsp;|&nbsp; {user_name}</b>", title_style)]], colWidths=[535], rowHeights=[26])
+    banner2.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#0F172A')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,-1), 'CENTER')]))
     story.append(banner2)
-    story.append(Spacer(1, 8))
+    story.append(Spacer(1, 6))
 
     table_data = []
     for line in text_page2.split('\n'):
@@ -202,34 +218,34 @@ def create_pdf(text_page1, text_page2, user_name, motiv_scores):
         if table_data:
             t = Table(table_data, colWidths=[100, 190, 245])
             t.setStyle(TableStyle([
-                ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#DDE6F0')),
+                ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#E2E8F0')),
                 ('ALIGN', (0,0), (-1,-1), 'CENTER'),
                 ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-                ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#B4C6E7')),
+                ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#CBD5E1')),
                 ('TOPPADDING', (0,0), (-1,-1), 4), ('BOTTOMPADDING', (0,0), (-1,-1), 4),
-                ('BACKGROUND', (0,1), (0,-1), colors.HexColor('#F4F7FB')),
+                ('BACKGROUND', (0,1), (0,-1), colors.HexColor('#F8FAFC')),
             ]))
             story.append(t)
-            story.append(Spacer(1, 6))
+            story.append(Spacer(1, 4))
             table_data = []
 
         if line.startswith('## '):
-            sec2 = Table([[Paragraph(line[3:], header_style)]], colWidths=[535], rowHeights=[20])
-            sec2.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#4A70B0')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE')]))
+            sec2 = Table([[Paragraph(line[3:], header_style)]], colWidths=[535], rowHeights=[18])
+            sec2.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#1E3A8A')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE')]))
             story.append(sec2)
-            story.append(Spacer(1, 3))
+            story.append(Spacer(1, 2))
         elif line.startswith('### '):
             story.append(Paragraph(clean_markdown_text(line[4:]), sub_style))
         elif line.startswith('- '):
             story.append(Paragraph(f"• {clean_markdown_text(line[2:])}", body_style))
-            story.append(Spacer(1, 2))
+            story.append(Spacer(1, 1))
         else:
             story.append(Paragraph(clean_markdown_text(line), body_style))
-            story.append(Spacer(1, 2))
+            story.append(Spacer(1, 1))
             
     if table_data:
         t = Table(table_data, colWidths=[100, 190, 245])
-        t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor('#DDE6F0')), ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#B4C6E7')), ('BACKGROUND', (0,1), (0,-1), colors.HexColor('#F4F7FB'))]))
+        t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor('#E2E8F0')), ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#CBD5E1')), ('BACKGROUND', (0,1), (0,-1), colors.HexColor('#F8FAFC'))]))
         story.append(t)
 
     doc.build(story)
@@ -240,13 +256,13 @@ if submitted:
     if not name: 
         st.warning("성명을 입력해주세요.")
     else:
-        with st.spinner("대상자의 심층 성향과 역량을 바탕으로 인문교양 학습, 토론형 강의, 생각 고도화 전략이 포함된 2페이지 풀구성 리포트를 생성 중입니다..."):
+        with st.spinner("✨ 프리미엄 세련된 디자인과 맞춤형 마스터플랜을 반영한 2페이지 보고서를 생성 중입니다..."):
             client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
             
             system_prompt = """
-            # ROLE: 수석 커리어 컨설턴트 및 조직 심리 전략가
+            # ROLE: 글로벌 최고 경영 컨설턴트 및 프리미엄 조직 심리 전략가
             # RULES & CONSTRAINTS:
-            1. 절대 금지 사항: 결과물 내에서 '사주', '명리', '별자리', 'MBTI', '에니어그램' 등 특정 진단 방법의 명칭이나 출처를 직접적으로 언급하거나 노출하지 말 것. 오직 전문적인 심리 기질 분석 및 행동 패턴 용어만 사용할 것.
+            1. 절대 금지 사항: '사주', '명리', '별자리', 'MBTI', '에니어그램' 등 진단 출처 명칭 직접 언급 금지. 전문 비즈니스/심리 용어 사용.
             2. 내용 풍성화: 정확히 2페이지 분량을 가득 채울 수 있도록 각 항목별로 매우 상세하고 깊이 있게 작성할 것.
             3. 마스터플랜 반영: 인문교양 학습 필요성, 토론 형식의 강의 수강을 통한 소통 및 비판적 사고 함양, 그리고 심층적인 생각의 고도화 방안을 구체적인 액션 플랜으로 반드시 포함할 것.
             4. 출력 형식: 반드시 아래의 구분자(`---PAGE_SPLIT---`)를 기준으로 페이지 1과 페이지 2 내용으로 나누어 출력할 것.
@@ -294,9 +310,9 @@ if submitted:
                 page1_text = parts[0]
                 page2_text = "## 인문교양 학습" + parts[1] if len(parts) > 1 else raw_content
             
-            st.success("✅ 인문교양, 토론형 강의, 심층 생각 고도화 마스터플랜이 포함된 2페이지 풀구성 리포트가 생성되었습니다.")
+            st.success("💎 세련된 프리미엄 디자인이 적용된 2페이지 통합 보고서가 완성되었습니다.")
             
-            # 웹 화면 출력
+            # 웹 화면 출력 (카드 컨테이너 디자인 적용)
             st.markdown("<div class='report-box'>", unsafe_allow_html=True)
             st.markdown("### [PAGE 1] 기질 및 심리 동기 진단 결과")
             st.markdown(page1_text)
@@ -308,4 +324,4 @@ if submitted:
             # PDF 다운로드 버튼
             pdf_file = create_pdf(page1_text, page2_text, name, [e1, e2, e3, e4, e7])
             with open(pdf_file, "rb") as f:
-                st.download_button("📕 2페이지 통합 보고서 PDF 다운로드", data=f, file_name=pdf_file, mime="application/pdf", use_container_width=True)
+                st.download_button("📕 프리미엄 PDF 보고서 다운로드", data=f, file_name=pdf_file, mime="application/pdf", use_container_width=True)
