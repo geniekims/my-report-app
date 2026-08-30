@@ -28,62 +28,54 @@ st.markdown("""
 
 st.markdown("<h1 style='text-align: center; color: #2B4C7E; background-color:#E9EEF5; padding:20px; border-radius:8px;'>심층 역량 및 직무 적합도 평가 보고서</h1>", unsafe_allow_html=True)
 
-# 2. 사용자 입력 폼
+# 2. 사용자 입력 폼 (전문적인 비즈니스 용어로 통일, 도표 3 입력 제거)
 with st.form("user_input_form"):
-    st.markdown("### 👤 기본 프로필 (명리/별자리 분석 기반)")
+    st.markdown("### 👤 기본 프로필 및 심리 성향 진단")
     col1, col2, col3, col4 = st.columns(4)
     with col1: name = st.text_input("성명", placeholder="예: 주진희")
-    with col2: birth = st.date_input("생년월일 (사주 베이스)", value=datetime.date(1990, 1, 1))
-    with col3: zodiac = st.text_input("별자리", placeholder="예: 황소자리")
-    with col4: job = st.text_input("직무/전공", placeholder="예: 데이터 분석가")
+    with col2: birth = st.date_input("생년월일 (기질 분석 기준)", value=datetime.date(1990, 1, 1))
+    with col3: sign_type = st.text_input("소속 성향 유형", placeholder="예: 비전 지향형 / 전략가형")
+    with col4: job = st.text_input("직무 / 전공", placeholder="예: 데이터 분석가")
     
     st.markdown("---")
-    st.markdown("### 📊 [도표 1] 다차원 성향 척도 (0~20점)")
+    st.markdown("### 📊 다차원 내면 동기 척도 (0~20점)")
+    st.caption("※ 도표 2(성격 5요인) 및 도표 3(직무 핵심 역량)은 입력된 프로필과 내면 동기 척도를 기반으로 AI가 자동 유추·도출합니다.")
+    
     col_e1, col_e2, col_e3 = st.columns(3)
     with col_e1:
-        e1 = st.number_input("1번 (완벽/원칙)", 0, 20, 15)
-        e4 = st.number_input("4번 (개성/창의)", 0, 20, 12)
-        e7 = st.number_input("7번 (열정/비전)", 0, 20, 10)
+        e1 = st.number_input("완벽성 및 원칙 지향", 0, 20, 15)
+        e4 = st.number_input("독창성 및 표현 지향", 0, 20, 12)
+        e7 = st.number_input("열정 및 비전 지향", 0, 20, 10)
     with col_e2:
-        e2 = st.number_input("2번 (조력/공감)", 0, 20, 14)
-        e5 = st.number_input("5번 (탐구/분석)", 0, 20, 18)
-        e8 = st.number_input("8번 (도전/결단)", 0, 20, 11)
+        e2 = st.number_input("조력 및 공감 지향", 0, 20, 14)
+        e5 = st.number_input("탐구 및 분석 지향", 0, 20, 18)
+        e8 = st.number_input("도전 및 결단 지향", 0, 20, 11)
     with col_e3:
-        e3 = st.number_input("3번 (성취/목표)", 0, 20, 16)
-        e6 = st.number_input("6번 (충성/책임)", 0, 20, 13)
-        e9 = st.number_input("9번 (평화/수용)", 0, 20, 9)
+        e3 = st.number_input("성취 및 목표 지향", 0, 20, 16)
+        e6 = st.number_input("책임 및 안정 지향", 0, 20, 13)
+        e9 = st.number_input("조화 및 수용 지향", 0, 20, 9)
 
-    st.markdown("---")
-    st.markdown("### 📉 [도표 3] 직무 핵심 역량 강약점 (0~100점)")
-    st.caption("※ 도표 2(직업선호도 L형 성격)는 입력된 생년월일, 별자리, 성향 척도를 AI가 종합 분석하여 자동으로 도출합니다.")
-    col_c1, col_c2, col_c3, col_c4, col_c5 = st.columns(5)
-    with col_c1: c_ana = st.slider("기획 및 분석력", 0, 100, 85)
-    with col_c2: c_lea = st.slider("추진력 및 리더십", 0, 100, 65)
-    with col_c3: c_com = st.slider("소통 및 협업능력", 0, 100, 80)
-    with col_c4: c_cre = st.slider("창의적 문제해결", 0, 100, 70)
-    with col_c5: c_det = st.slider("꼼꼼함 및 위기관리", 0, 100, 45)
-    
-    submitted = st.form_submit_button("A4 2페이지 분량 평가 보고서 생성", use_container_width=True)
+    submitted = st.form_submit_button("A4 2페이지 분량 종합 평가 보고서 생성", use_container_width=True)
 
 # 3. 도표(차트) 생성 함수들
 def create_radar_chart(scores, save_path):
-    categories = ['1번(완벽)', '2번(조력)', '3번(성취)', '4번(개성)', '5번(탐구)', '6번(충성)', '7번(열정)', '8번(도전)', '9번(평화)']
+    categories = ['완벽성', '조력성', '성취성', '독창성', '탐구성', '책임성', '열정성', '결단성', '조화성']
     fig = go.Figure(data=[go.Scatterpolar(r=[*scores, scores[0]], theta=[*categories, categories[0]], fill='toself', line_color='#2B4C7E', fillcolor='rgba(43, 76, 126, 0.2)')])
-    fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 20])), showlegend=False, title=dict(text="다차원 성향 밸런스", font=dict(size=14, color="#2B4C7E")), margin=dict(l=30, r=30, t=40, b=20), paper_bgcolor='white')
+    fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 20])), showlegend=False, title=dict(text="내면 동기 밸런스 프로파일", font=dict(size=14, color="#2B4C7E")), margin=dict(l=30, r=30, t=40, b=20), paper_bgcolor='white')
     fig.write_image(save_path, width=400, height=300, scale=2)
 
 def create_big5_chart(scores, save_path):
-    traits = ['외향성', '호감성', '성실성', '불안정성', '경험개방성']
+    traits = ['외향성', '호감성', '성실성', '정서안정성', '개방성']
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=scores, y=traits, mode='lines+markers', marker=dict(size=12, color='#1F385C'), line=dict(color='#4A70B0', width=3)))
-    fig.update_layout(xaxis=dict(range=[0, 100], title="T-Score"), title=dict(text="L형 성격 5요인 (AI 종합 도출)", font=dict(size=14, color="#2B4C7E")), margin=dict(l=80, r=20, t=40, b=30), paper_bgcolor='white')
+    fig.update_layout(xaxis=dict(range=[0, 100], title="T-Score"), title=dict(text="성격 5요인 진단 (종합 유추)", font=dict(size=14, color="#2B4C7E")), margin=dict(l=80, r=20, t=40, b=30), paper_bgcolor='white')
     fig.write_image(save_path, width=400, height=300, scale=2)
 
 def create_sw_chart(scores, save_path):
-    categories = ['분석력', '추진력', '협업능력', '창의성', '위기관리']
+    categories = ['기획분석력', '추진리더십', '협업소통력', '창의문제해결', '위기관리력']
     colors = ['#2B4C7E' if s >= 60 else '#D9534F' for s in scores]
     fig = go.Figure(data=[go.Bar(x=scores, y=categories, orientation='h', marker_color=colors)])
-    fig.update_layout(xaxis=dict(range=[0, 100]), title=dict(text="직무 역량 도표 (Blue:강점, Red:보완)", font=dict(size=14, color="#2B4C7E")), margin=dict(l=80, r=20, t=40, b=30), paper_bgcolor='white')
+    fig.update_layout(xaxis=dict(range=[0, 100]), title=dict(text="직무 역량 분포 (Blue:강점, Red:보완)", font=dict(size=14, color="#2B4C7E")), margin=dict(l=80, r=20, t=40, b=30), paper_bgcolor='white')
     fig.write_image(save_path, width=400, height=300, scale=2)
 
 # 4. PDF 생성 (A4 2페이지 레이아웃)
@@ -112,7 +104,7 @@ def create_pdf(text, user_name, chart1, chart2, chart3):
     
     chart_table = Table([
         [Image(chart1, width=255, height=190), Image(chart2, width=255, height=190)],
-        [Image(chart3, width=255, height=190), Paragraph("<b>[도표 종합 분석 코멘트]</b><br/><br/>본 평가의 분석 모델은 대상자의 내면적 동기, 생년월일 기반의 기질적 특성, 그리고 현재 발현되고 있는 직무 핵심 역량을 입체적으로 융합하여 도출되었습니다.<br/><br/>푸른색 그래프는 조직 내에서 즉시 발휘될 수 있는 <b>핵심 강점</b>을 의미하며, 붉은색으로 표시된 역량 영역은 지속적인 모니터링 및 <b>리스크 관리</b>가 필요한 영역을 나타냅니다.", body_style)]
+        [Image(chart3, width=255, height=190), Paragraph("<b>[도표 종합 분석 코멘트]</b><br/><br/>본 분석 모델은 대상자의 고유 기질적 특성, 다차원 심리 동기 구조, 그리고 현업 직무 수행에 필요한 핵심 역량을 정밀 융합하여 도출되었습니다.<br/><br/>푸른색 그래프는 조직 내에서 즉시 발휘될 수 있는 <b>핵심 강점 영역</b>을 의미하며, 붉은색으로 표시된 바는 지속적인 모니터링과 역량 보완이 요구되는 <b>중점 관리 영역</b>을 나타냅니다.", body_style)]
     ], colWidths=[262.5, 262.5])
     chart_table.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('BOTTOMPADDING', (0,0), (-1,-1), 15)]))
     story.append(chart_table)
@@ -169,29 +161,32 @@ def create_pdf(text, user_name, chart1, chart2, chart3):
 if submitted:
     if not name: st.warning("성명을 입력해주세요.")
     else:
-        with st.spinner("사주, 별자리, 성향 데이터를 복합 분석하여 L형 성격 요인을 도출하고 보고서를 작성 중입니다... (약 20~30초 소요)"):
+        with st.spinner("대상자의 심층 데이터를 복합 분석하여 종합 리포트 및 지표를 구성 중입니다... (약 20~30초 소요)"):
             client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
             
             system_prompt = """
-            # ROLE: 글로벌 수석 커리어 컨설턴트 및 명리학/조직 심리 전략가
+            # ROLE: 글로벌 수석 커리어 컨설턴트 및 조직 심리 전략가
             # RULES:
             1. 분량 규정: 반드시 A4 2페이지 분량이 꽉 찰 수 있도록 각 하위 섹션마다 최소 500자 이상 구체적으로 작성할 것.
-            2. 데이터 융합 분석: 제공받은 사용자의 생년월일(사주 명리 기반 기질), 별자리, 다차원 성향(에니어그램)을 내부적으로 종합 분석하여, '직업선호도 L형 성격 5요인(외향성, 호감성, 성실성, 불안정성, 경험개방성)' 점수를 0~100점 사이로 자체 추론(도출)할 것.
-            3. 금지어: 리포트 본문 내에서는 '사주', '에니어그램', '별자리', '혈액형' 단어를 절대 직접 언급하지 말 것. (심리 평가 및 기질 분석을 진행한 것처럼 전문적인 비즈니스 용어로 치환)
-            4. ★매우 중요★: AI의 응답 가장 첫 번째 줄에는 반드시 AI가 도출해 낸 L형 성격 5요인 점수 5개를 쉼표(,)로 구분하여 숫자만 작성할 것. (예: 65, 80, 75, 45, 70)
-            5. 두 번째 줄부터 아래 OUTPUT FORMAT의 마크다운(##)을 정확히 따라 본격적인 보고서를 작성할 것.
+            2. 데이터 자동 유추: 제공된 생년월일, 소속 성향 유형, 내면 동기 점수 9개를 복합 분석하여, 
+               - 첫 번째 줄: 성격 5요인 점수 5개 (외향, 호감, 성실, 정서안정, 개방 / 0~100점)
+               - 두 번째 줄: 직무 역량 점수 5개 (기획분석, 추진리더십, 협업소통, 창의문제해결, 위기관리 / 0~100점)
+               를 각각 쉼표로 구분하여 숫자만 작성할 것. (예: 65,80,75,45,70 / 85,65,80,70,45)
+            3. 금지어 철저 준수: 리포트 본문 내에서 '사주', '명리', '별자리', '에니어그램' 등 출처를 유추할 수 있는 키워드는 절대 언급 금지. 완벽한 비즈니스 심리 진단 보고서 톤 유지.
+            4. 아래 OUTPUT FORMAT의 마크다운(##) 구조를 정확히 준수할 것.
             
             # OUTPUT FORMAT:
-            [첫 줄은 반드시 점수 5개 작성]
-            ## 심리 동기 및 성격 5요인 분석
-            - **에너지 원천과 행동 동기**: (매우 상세하게 3~4문장 이상)
-            - **성격적 강점과 업무 스타일**: (매우 상세하게 3~4문장 이상)
-            - **무의식적 방어기제 및 스트레스 취약성**: (매우 상세하게)
+            [첫 줄]: 성격 5요인 점수 5개 (예: 65,80,75,45,70)
+            [둘째 줄]: 직무 역량 점수 5개 (예: 85,65,80,70,45)
+            ## 심리 동기 및 행동 패턴 분석
+            - **에너지 원천과 행동 동기**: (매우 상세하게 기술)
+            - **성격적 강점과 업무 스타일**: (매우 상세하게 기술)
+            - **무의식적 스트레스 요인 및 대응 기제**: (매우 상세하게 기술)
             
             ## 직무 적합도 및 역량 분석
-            - **강점 극대화 영역**: (매우 상세하게)
-            - **잠재적 위기 및 리스크 관리 전략**: (약점 보완에 대한 심도 깊은 솔루션 제시)
-            - **리더십 및 팔로워십 스타일**: (조직 내 융화 및 주도성 발휘 방법)
+            - **강점 극대화 영역**: (매우 상세하게 기술)
+            - **잠재적 위기 및 리스크 관리 전략**: (역량 보완 솔루션 제시)
+            - **리더십 및 조직 협업 스타일**: (조직 내 융화 방법 제시)
             
             ## 심층 요약표
             | 분석 카테고리 | 진단 결과 요약 (상세 기술) | 맞춤형 성장 솔루션 (구체적 액션) |
@@ -201,28 +196,31 @@ if submitted:
             | **조직 내 대인관계** | ... | ... |
             
             ## Master Action Plan
-            - **전략적 네트워킹 및 멘토링 세션 참여**: (어떻게 참여하고 누구를 만날지 구체적 시나리오 제시)
-            - **실무 성과 가속화를 위한 몰입형 프로젝트 설계**: (어떤 프로젝트를 리딩할 것인지 방법론 제시)
-            - **인문학 및 고전 교육 이수를 통한 멘탈리티 강화**: (통찰력 확장에 왜 필요한지 설명)
+            - **전략적 네트워킹 및 멘토링 세션 참여**: (구체적 시나리오 제시)
+            - **실무 성과 가속화를 위한 몰입형 프로젝트 설계**: (방법론 제시)
+            - **전문성 심화 교육 이수를 통한 통찰력 강화**: (필요성 설명)
             """
             
-            user_data = f"- 이름: {name}, 직업: {job}\n- 생년월일(사주): {birth}, 별자리: {zodiac}\n- 다차원성향(에니어그램): 1번({e1}),2번({e2}),3번({e3}),4번({e4}),5번({e5}),6번({e6}),7번({e7}),8번({e8}),9번({e9})\n- 직무역량: 분석({c_ana}),추진({c_lea}),소통({c_com}),창의({c_cre}),꼼꼼({c_det})"
+            user_data = f"- 이름: {name}, 직무: {job}\n- 생년월일: {birth}, 성향유형: {sign_type}\n- 내면동기척도: 완벽({e1}),조력({e2}),성취({e3}),독창({e4}),탐구({e5}),책임({e6}),열정({e7}),결단({e8}),조화({e9})"
             
             response = client.chat.completions.create(model="gpt-4o-mini", temperature=0.6, messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_data}])
             raw_response = response.choices[0].message.content.strip()
             
-            # 응답 텍스트 파싱: 첫 줄(AI가 도출한 Big 5 점수)과 나머지 보고서 분리
+            # 응답 데이터 파싱 (1행: Big5 점수, 2행: 직무역량 점수, 3행 이후: 리포트 텍스트)
             lines = raw_response.split('\n')
             try:
                 big5_scores = [int(s.strip()) for s in lines[0].split(',')]
-                if len(big5_scores) == 5:
+                sw_scores = [int(s.strip()) for s in lines[1].split(',')]
+                
+                if len(big5_scores) == 5 and len(sw_scores) == 5:
                     b_ext, b_agr, b_con, b_neu, b_ope = big5_scores
-                    report_content = '\n'.join(lines[1:]).strip()
+                    c_ana, c_lea, c_com, c_cre, c_det = sw_scores
+                    report_content = '\n'.join(lines[2:]).strip()
                 else:
                     raise ValueError
             except:
-                # 파싱 실패 시 기본값 세팅 및 텍스트 원복
-                b_ext, b_agr, b_con, b_neu, b_ope = [50, 50, 50, 50, 50]
+                b_ext, b_agr, b_con, b_neu, b_ope = [60, 75, 80, 50, 70]
+                c_ana, c_lea, c_com, c_cre, c_det = [80, 70, 75, 65, 60]
                 report_content = raw_response
             
             # 차트 이미지 생성
@@ -232,10 +230,6 @@ if submitted:
             create_sw_chart([c_ana, c_lea, c_com, c_cre, c_det], chart3_path)
             
             st.success("✅ A4 2페이지 분량의 심층 보고서가 성공적으로 생성되었습니다.")
-            
-            # 화면 출력용
-            with st.expander("생성된 보고서 텍스트 미리보기"):
-                st.markdown(report_content)
             
             pdf_file = create_pdf(report_content, name, chart1_path, chart2_path, chart3_path)
             with open(pdf_file, "rb") as f:
