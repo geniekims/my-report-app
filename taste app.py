@@ -38,7 +38,7 @@ with st.form("user_input_form"):
     st.markdown("### 👤 기본 프로필 및 심리 성향 진단")
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1: 
-        name = st.text_input("성명", placeholder="예: 김도영")
+        name = st.text_input("성명", placeholder="예: 홍길동")
     with col2: 
         birth = st.date_input(
             "생년월일", 
