@@ -40,11 +40,11 @@ st.markdown("""
 st.markdown("""
     <div style='background: linear-gradient(135deg, #1E293B 0%, #4F46E5 100%); padding: 30px; border-radius: 12px; text-align: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
         <h1 style='color: white; margin-bottom: 10px; font-size: 28px;'>다차원 성향 분석 레포트</h1>
-        <p style='color: #CBD5E1; font-size: 15px; margin: 0;'>사주, 별자리, 혈액형, 에니어그램 종합 지표 분석 및 마스터플랜</p>
+        <p style='color: #CBD5E1; font-size: 15px; margin: 0;'>선천적 기질 및 9원 내면 동기 지표 종합 분석 및 마스터플랜</p>
     </div>
 """, unsafe_allow_html=True)
 
-# 2. 사용자 입력 폼 (요청하신 조건에 맞춤)
+# 2. 사용자 입력 폼 (UI에서도 특정 명칭 직접 노출 최소화)
 with st.form("user_input_form"):
     st.markdown("### 👤 기본 정보 입력")
     col1, col2, col3 = st.columns(3)
@@ -53,10 +53,10 @@ with st.form("user_input_form"):
     with col2: 
         birth = st.date_input("생년월일", value=datetime.date(2000, 1, 1), min_value=datetime.date(1920, 1, 1))
     with col3: 
-        blood_type = st.selectbox("혈액형", ["A형", "B형", "O형", "AB형"])
+        blood_type = st.selectbox("생체 기질 분류", ["A형", "B형", "O형", "AB형"])
     
     st.markdown("---")
-    st.markdown("### 📊 에니어그램 성향 점수 입력 (각 항목별 최대 20점)")
+    st.markdown("### 📊 9원 성향 지표 점수 입력 (각 항목별 최대 20점)")
     
     col_e1, col_e2, col_e3 = st.columns(3)
     with col_e1:
@@ -100,18 +100,16 @@ def create_score_bar_drawing(scores, start_idx=0, count=5):
         
         d.add(String(10, y_pos + 12, item_labels[idx], fontName='NanumGothicBold', fontSize=8, fillColor=colors.HexColor('#0F172A')))
         
-        # 우측 20점 만점 환산 표기
         d.add(String(435, y_pos + 12, f"획득점수: {score}/20점", fontName='NanumGothicBold', fontSize=8, fillColor=colors.HexColor('#4F46E5')))
         d.add(String(505, y_pos + 12, f"[{level_text}]", fontName='NanumGothic', fontSize=7, fillColor=colors.HexColor(color_code)))
         
-        # 20점 만점 기준 막대 길이 계산 (score / 20.0)
         d.add(Rect(120, y_pos, 300, 6, fillColor=colors.HexColor('#E2E8F0'), strokeColor=None, rx=3, ry=3))
         bar_width = (score / 20.0) * 300
         d.add(Rect(120, y_pos, bar_width, 6, fillColor=colors.HexColor('#6366F1'), strokeColor=None, rx=3, ry=3))
         
     return d
 
-# 4. PDF 생성 함수 (테이블 및 텍스트 렌더링 포함)
+# 4. PDF 생성 함수
 def create_pdf(text_page1, text_page2, user_name, scores):
     filename = f"{user_name}_Multidimensional_Analysis_Report.pdf"
     doc = SimpleDocTemplate(filename, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=20, bottomMargin=20)
@@ -212,17 +210,19 @@ if submitted:
     if not name: 
         st.warning("성명을 입력해주세요.")
     else:
-        with st.spinner("🧭 사주, 별자리, 에니어그램을 종합하여 다차원 레포트를 작성 중입니다..."):
+        with st.spinner("🧭 다차원 데이터를 융합하여 심층 레포트를 작성 중입니다..."):
             client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
             
             system_prompt = """
-            # ROLE: 다차원 성향 분석 전문가 (별자리, 사주, 혈액형, 에니어그램 종합 분석가)
+            # ROLE: 다차원 기질 및 조직 심리 분석 전문가
             # RULES & CONSTRAINTS:
-            1. 분석 기반: 제공된 생년월일을 바탕으로 사주의 기운과 별자리 성향을 도출하고, 이를 혈액형과 에니어그램 점수(각 20점 만점)와 융합하여 입체적으로 분석하라.
-            2. 성향 예측 점수: 온전성, 사교성, 리더십, 적극성, 긍정성의 5가지 지표를 0~100점 사이로 도출하여 서두에 배치하라.
-            3. 서술 방식: 각 섹션(1~4번)은 개조식(Bullet point)으로 핵심을 요약한 뒤, **사주/별자리/혈액형/에니어그램의 요소가 어떻게 결합되어 나타나는지 구체적이고 깊이 있는 서술형 문장(최소 4~5줄)으로 덧붙일 것.**
-            4. 마스터 플랜: 최종 계획표에는 [실질적 추천 3가지], [인문학 교양 추천], [모니터링 수행 및 멘토링 가이드], [새로운 한계 도전 과제]가 누락 없이 포함되어야 한다.
-            5. 출력 형식: 분량을 조절하여 반드시 `---PAGE_SPLIT---`를 기준으로 1페이지와 2페이지를 나누어 출력하라.
+            1. 절대 금지 사항: 특정 진단 및 분석 명칭('사주', '명리', '별자리', '혈액형', 'MBTI', '에니어그램' 등)을 출력물에 절대 직접 언급하지 말 것. 
+               - 대신 '선천적 출생 기운', '출생 절기적 특성', '생체적 기질', '9원 내면 동기 지표' 등 간접적이고 전문적인 심리학/철학 용어로 반드시 대체하여 서술할 것.
+            2. 분석 기반: 제공된 생년월일 데이터와 생체 기질, 9가지 성향 점수를 융합하여 입체적으로 분석하되, 앞서 명시한 금지 단어들을 완벽히 배제할 것.
+            3. 성향 예측 점수: 온전성, 사교성, 리더십, 적극성, 긍정성의 5가지 지표를 0~100점 사이로 도출하여 서두에 배치하라.
+            4. 서술 방식: 각 섹션(1~4번)은 개조식(Bullet point)으로 핵심을 요약한 뒤, 각 기질적 요소들이 어떻게 결합되어 나타나는지 구체적이고 깊이 있는 서술형 문장(최소 4~5줄)으로 덧붙일 것.
+            5. 마스터 플랜: 최종 계획표에는 [실질적 추천 3가지], [인문학 교양 추천], [모니터링 수행 및 멘토링 가이드], [새로운 한계 도전 과제]가 누락 없이 포함되어야 한다.
+            6. 출력 형식: 분량을 조절하여 반드시 `---PAGE_SPLIT---`를 기준으로 1페이지와 2페이지를 나누어 출력하라.
 
             # OUTPUT FORMAT:
             ## 📊 종합 성향 예측 지표
@@ -231,7 +231,7 @@ if submitted:
             ## 1. 심리 동기 및 행동 패턴 심층 분석
             - [핵심 요약 포인트 1]
             - [핵심 요약 포인트 2]
-            (별자리, 사주명리적 기질, 혈액형, 에니어그램의 내면 동기가 융합된 상세 서술형 문장 작성)
+            (출생 기반의 선천적 기운, 절기적 특성, 체액적 기질, 9원 내면 동기가 융합된 상세 서술형 문장 작성 - 특정 명칭 언급 불가)
 
             ## 2. 직무 적합도 및 핵심 역량 정밀 진단
             - [핵심 요약 포인트 1]
@@ -248,7 +248,7 @@ if submitted:
             ## 4. 강점·약점 종합 및 개선 방향
             - [핵심 요약 포인트 1]
             - [핵심 요약 포인트 2]
-            (선천적(사주,별자리)/후천적(에니어그램) 강점을 극대화하고 약점을 보완하는 실질적 방향 제시)
+            (선천적 강점을 극대화하고 후천적 약점을 보완하는 실질적 방향 제시)
 
             ## 🎯 마스터 플랜 (Action Guide)
             | 구분 | 세부 실행 과제 및 지침 |
@@ -262,8 +262,8 @@ if submitted:
             """
             
             user_data = f"""
-            - 이름: {name}, 생년월일: {birth}, 혈액형: {blood_type}
-            - 에니어그램 (20점 만점): 
+            - 이름: {name}, 생년월일: {birth}, 생체 기질: {blood_type}
+            - 9원 성향 지표 (20점 만점): 
               1번({e1}), 2번({e2}), 3번({e3}), 4번({e4}), 5번({e5}), 
               6번({e6}), 7번({e7}), 8번({e8}), 9번({e9})
             """
