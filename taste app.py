@@ -39,17 +39,22 @@ st.markdown("""
 st.markdown("""
     <div style='background: linear-gradient(135deg, #1E293B 0%, #4F46E5 100%); padding: 30px; border-radius: 12px; text-align: center; color: white; margin-bottom: 20px;'>
         <h1 style='color: white; margin-bottom: 5px; font-size: 26px;'>다차원 심층 성향 분석 레포트</h1>
-        <p style='color: #CBD5E1; font-size: 14px; margin: 0;'>선천적 기질 및 9원 내면 동기 지표 종합 분석 (대량 밀도형)</p>
+        <p style='color: #CBD5E1; font-size: 14px; margin: 0;'>선천적 기질 및 9원/16유형 종합 분석 (대량 밀도형)</p>
     </div>
 """, unsafe_allow_html=True)
 
-# 2. 사용자 입력 폼
+# 2. 사용자 입력 폼 (MBTI 추가)
 with st.form("user_input_form"):
     st.markdown("### 👤 기본 정보 입력")
-    col1, col2, col3 = st.columns(3)
+    # 컬럼을 4개로 확장하여 MBTI 입력 공간 마련
+    col1, col2, col3, col4 = st.columns(4)
     with col1: name = st.text_input("성명", value="주진희")
     with col2: birth = st.date_input("생년월일", value=datetime.date(2000, 1, 1), min_value=datetime.date(1920, 1, 1))
     with col3: blood_type = st.selectbox("생체 기질 분류", ["A형", "B형", "O형", "AB형"])
+    with col4: mbti = st.selectbox("16유형 인지 기질", [
+        "ISTJ", "ISFJ", "INFJ", "INTJ", "ISTP", "ISFP", "INFP", "INTP", 
+        "ESTP", "ESFP", "ENFP", "ENTP", "ESTJ", "ESFJ", "ENFJ", "ENTJ"
+    ])
     
     st.markdown("---")
     st.markdown("### 📊 9원 성향 지표 점수 입력 (각 항목별 최대 20점)")
@@ -72,7 +77,7 @@ with st.form("user_input_form"):
 def clean_markdown_text(text):
     return re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
 
-# 3. 차트 생성 함수 (막대그래프 & 9각형 레이더차트)
+# 3. 차트 생성 함수
 def create_indicator_bar_chart(scores, width=265, height=220):
     labels = ["온전성", "사교성", "리더십", "적극성", "긍정성"]
     d = Drawing(width, height)
@@ -104,7 +109,6 @@ def create_radar_chart(scores, width=265, height=220):
     center_x, center_y = width/2, height/2 - 10
     max_r = 70
     
-    # 배경 다각형 격자
     for level in [1, 2, 3]:
         r = max_r * (level / 3.0)
         points = []
@@ -115,7 +119,6 @@ def create_radar_chart(scores, width=265, height=220):
             points.extend([x, y])
         d.add(Polygon(points, fillColor=None, strokeColor=colors.HexColor('#CBD5E1'), strokeWidth=0.5))
     
-    # 축 및 라벨
     labels = ['1.원칙', '2.조력', '3.성취', '4.독창', '5.탐구', '6.책임', '7.열정', '8.도전', '9.조화']
     for i in range(9):
         angle = i * (360/9) * math.pi / 180 - math.pi/2
@@ -127,7 +130,6 @@ def create_radar_chart(scores, width=265, height=220):
         ly = center_y + (max_r + 14) * math.sin(angle) - 3
         d.add(String(lx-9, ly, labels[i], fontName='NanumGothic', fontSize=7, fillColor=colors.HexColor('#334155')))
         
-    # 데이터 다각형 (9각형)
     data_points = []
     for i in range(9):
         angle = i * (360/9) * math.pi / 180 - math.pi/2
@@ -139,7 +141,7 @@ def create_radar_chart(scores, width=265, height=220):
     d.add(Polygon(data_points, fillColor=colors.Color(79/255.0, 70/255.0, 229/255.0, 0.4), strokeColor=colors.HexColor('#4F46E5'), strokeWidth=1.5))
     return d
 
-# 4. PDF 생성 함수 (대량 텍스트 & 여백 최소화 최적화)
+# 4. PDF 생성 함수
 def create_pdf(text_content, user_name, comp_scores, nine_scores):
     filename = f"{user_name}_Multidimensional_Analysis_Report.pdf"
     doc = SimpleDocTemplate(filename, pagesize=A4, rightMargin=25, leftMargin=25, topMargin=20, bottomMargin=20)
@@ -162,13 +164,11 @@ def create_pdf(text_content, user_name, comp_scores, nine_scores):
 
     story = []
     
-    # 상단 배너
     banner = Table([[Paragraph(f"<b>다차원 성향 심층 분석 레포트 &nbsp;|&nbsp; {user_name} 님</b>", title_style)]], colWidths=[545], rowHeights=[24])
     banner.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#1E293B')), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('ALIGN', (0,0), (-1,-1), 'CENTER')]))
     story.append(banner)
     story.append(Spacer(1, 4))
     
-    # 차트 좌우 나란히 배치 (공간 절약)
     chart_table = Table([[create_indicator_bar_chart(comp_scores), create_radar_chart(nine_scores)]], colWidths=[272, 272])
     chart_table.setStyle(TableStyle([
         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
@@ -179,13 +179,10 @@ def create_pdf(text_content, user_name, comp_scores, nine_scores):
     story.append(chart_table)
     story.append(Spacer(1, 6))
 
-    # 본문 렌더링
     table_data = []
     for line in text_content.split('\n'):
         line = line.strip()
         if not line: continue
-        
-        # 스코어 태그 숨김 처리
         if line.startswith('<SCORES>') or line.startswith('</SCORES>'): continue
         
         if line.startswith('|'):
@@ -236,17 +233,17 @@ if submitted:
     if not name: 
         st.warning("성명을 입력해주세요.")
     else:
-        with st.spinner("🧭 다차원 데이터를 융합하여 심층 레포트를 작성 중입니다... (대량 텍스트 생성중)"):
+        with st.spinner("🧭 16유형 정보 및 다차원 데이터를 융합하여 심층 레포트를 작성 중입니다... (대량 텍스트 생성중)"):
             client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
             
             system_prompt = """
             # ROLE: 다차원 기질 및 조직 심리 분석 전문가
             # RULES & CONSTRAINTS:
-            1. 절대 금지 사항: 특정 진단 및 분석 명칭('사주', '명리', '별자리', '혈액형', 'MBTI', '에니어그램' 등)을 출력물에 절대 직접 언급하지 말 것. 
-               - 대신 '선천적 출생 기운', '출생 절기적 특성', '생체적 기질', '9원 내면 동기 지표' 등 간접적이고 전문적인 심리학/철학 용어로 반드시 대체하여 서술할 것.
+            1. 절대 금지 사항: 특정 진단 및 분석 명칭('사주', '명리', '별자리', '혈액형', 'MBTI', '에니어그램' 등)은 물론, **4자리 영문 알파벳(예: ENFP, ISTJ 등)**을 출력물에 절대 직접 언급하지 말 것. 
+               - 대신 '선천적 출생 기운', '체액적 특성', '9원 내면 동기', '16가지 인지 및 정보 처리 기질(또는 내향적 직관 및 사고 기질 등 풀어서 설명)' 등 간접적이고 전문적인 심리학/철학 용어로 반드시 대체하여 서술할 것.
             2. 성향 예측 점수(핵심): 결과물 맨 첫 줄에 반드시 다음 형식으로 5가지 종합 점수를 출력하라. (숫자는 0~100 사이)
                <SCORES>온전성:85, 사교성:72, 리더십:90, 적극성:88, 긍정성:76</SCORES>
-            3. 분석 기반: 제공된 생년월일 데이터와 생체 기질, 9가지 성향 점수를 융합하여 입체적으로 분석하라.
+            3. 분석 기반: 제공된 생년월일, 생체 기질, 9가지 성향 점수, 그리고 새롭게 추가된 16유형 인지 기질 데이터를 모두 융합하여 입체적으로 분석하라.
             4. 대량 텍스트 출력: 빈 공간을 최소화할 수 있도록 각 섹션별로 빽빽하고 심도 깊은 서술을 대량으로 생성하라. 개별 문단을 구체적이고 길게 작성하라.
             5. 마스터 플랜: 최종 계획표에는 [실질적 추천 3가지], [인문학 교양 추천], [모니터링 수행 및 멘토링 가이드], [새로운 한계 도전 과제]가 누락 없이 포함되어야 한다.
 
@@ -256,7 +253,7 @@ if submitted:
             ## 1. 심리 동기 및 행동 패턴 심층 분석
             - [핵심 요약 포인트 1]
             - [핵심 요약 포인트 2]
-            (선천적 출생 기운, 체액적 특성, 9원 내면 동기가 융합된 심층 서술을 10~15줄 이상의 대량의 텍스트로 작성)
+            (선천적 출생 기운, 체액적 특성, 9원 내면 동기, 16가지 인지 정보 처리 기질이 융합된 심층 서술을 10~15줄 이상의 대량의 텍스트로 작성)
 
             ## 2. 직무 적합도 및 핵심 역량 정밀 진단
             - [핵심 요약 포인트 1]
@@ -284,8 +281,10 @@ if submitted:
             | **challenge** | (안전지대를 벗어나기 위한 새로운 도전 목표 제시) |
             """
             
+            # 입력 데이터 폼에 MBTI 데이터가 추가되어 프롬프트로 전송됨
             user_data = f"""
             - 이름: {name}, 생년월일: {birth}, 생체 기질: {blood_type}
+            - 16유형 인지 기질(MBTI): {mbti}
             - 9원 성향 지표 (20점 만점): 
               1번({e1}), 2번({e2}), 3번({e3}), 4번({e4}), 5번({e5}), 
               6번({e6}), 7번({e7}), 8번({e8}), 9번({e9})
@@ -298,8 +297,7 @@ if submitted:
             )
             raw_content = response.choices[0].message.content.strip()
             
-            # 예측 점수 파싱
-            comp_scores = [85, 75, 80, 70, 90] # 기본값
+            comp_scores = [85, 75, 80, 70, 90]
             score_match = re.search(r'<SCORES>(.*?)</SCORES>', raw_content)
             if score_match:
                 score_str = score_match.group(1)
@@ -307,18 +305,15 @@ if submitted:
                 if len(nums) >= 5:
                     comp_scores = [int(n) for n in nums[:5]]
             
-            # 태그 제거한 클린 텍스트
             clean_content = re.sub(r'<SCORES>.*?</SCORES>\n*', '', raw_content, flags=re.DOTALL)
             nine_scores = [e1, e2, e3, e4, e5, e6, e7, e8, e9]
             
             st.success("🧭 다차원 성향 분석 레포트가 완성되었습니다.")
             
-            # 화면 UI 렌더링
             st.markdown("<div class='report-box'>", unsafe_allow_html=True)
             st.markdown(clean_content)
             st.markdown("</div>", unsafe_allow_html=True)
             
-            # PDF 생성 및 다운로드
             pdf_file = create_pdf(clean_content, name, comp_scores, nine_scores)
             with open(pdf_file, "rb") as f:
                 st.download_button("📕 다차원 분석 PDF 다운로드", data=f, file_name=pdf_file, mime="application/pdf", use_container_width=True)
