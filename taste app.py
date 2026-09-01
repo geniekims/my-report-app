@@ -142,7 +142,6 @@ def create_radar_chart(scores, width=265, height=220):
 # 4. PDF 생성 함수 (대량 텍스트 & 여백 최소화 최적화)
 def create_pdf(text_content, user_name, comp_scores, nine_scores):
     filename = f"{user_name}_Multidimensional_Analysis_Report.pdf"
-    # 여백 최소화 (Margin 줄임)
     doc = SimpleDocTemplate(filename, pagesize=A4, rightMargin=25, leftMargin=25, topMargin=20, bottomMargin=20)
     
     font_path = "NanumGothic.ttf"
@@ -157,7 +156,6 @@ def create_pdf(text_content, user_name, comp_scores, nine_scores):
     title_style = ParagraphStyle('MainTitle', fontName='NanumGothicBold', fontSize=12, textColor=colors.white, alignment=TA_CENTER)
     header_style = ParagraphStyle('SectionHeader', fontName='NanumGothicBold', fontSize=10, textColor=colors.white, alignment=TA_CENTER)
     sub_style = ParagraphStyle('SubHeader', fontName='NanumGothicBold', fontSize=8.5, textColor=colors.HexColor('#4F46E5'), spaceBefore=2, spaceAfter=2)
-    # 텍스트 밀도 높임 (줄간격 타이트하게)
     body_style = ParagraphStyle('Body', fontName='NanumGothic', fontSize=8, leading=12, textColor=colors.HexColor('#334155'), spaceAfter=2)
     th_style = ParagraphStyle('TableHeader', fontName='NanumGothicBold', fontSize=8, alignment=TA_CENTER, textColor=colors.HexColor('#1E293B'))
     td_style = ParagraphStyle('TableData', fontName='NanumGothic', fontSize=8, leading=11.5, alignment=TA_LEFT)
@@ -249,68 +247,78 @@ if submitted:
             2. 성향 예측 점수(핵심): 결과물 맨 첫 줄에 반드시 다음 형식으로 5가지 종합 점수를 출력하라. (숫자는 0~100 사이)
                <SCORES>온전성:85, 사교성:72, 리더십:90, 적극성:88, 긍정성:76</SCORES>
             3. 분석 기반: 제공된 생년월일 데이터와 생체 기질, 9가지 성향 점수를 융합하여 입체적으로 분석하라.
-            4. **대량 텍스트 출력### 시각화 레이아웃 변환 및 밀집 출력 스크립트
+            4. 대량 텍스트 출력: 빈 공간을 최소화할 수 있도록 각 섹션별로 빽빽하고 심도 깊은 서술을 대량으로 생성하라. 개별 문단을 구체적이고 길게 작성하라.
+            5. 마스터 플랜: 최종 계획표에는 [실질적 추천 3가지], [인문학 교양 추천], [모니터링 수행 및 멘토링 가이드], [새로운 한계 도전 과제]가 누락 없이 포함되어야 한다.
 
-요청하신 조건에 맞춰 여백(Margin/Padding)을 최소화하고, 종합 성향 지표와 에니어그램을 한 페이지에 최대한 타일 형태로 꽉 채워 대량 렌더링하는 Python 데이터 시각화 스크립트입니다. 
+            # OUTPUT FORMAT:
+            <SCORES>온전성:[XX], 사교성:[XX], 리더십:[XX], 적극성:[XX], 긍정성:[XX]</SCORES>
 
-**주요 적용 사항:**
-*   **종합 성향 지표:** 수직 막대그래프(`Bar Chart`) 적용
-*   **에니어그램 점수표:** 극좌표계(`Polar`)를 활용하여 $360^\circ / 9 = 40^\circ$ 간격의 9각형 방사형 도표(Radar Chart) 적용
-*   **대량 출력:** `GridSpec` 여백 제로 세팅으로 빈 공간 완벽 제거 및 눈금표(Tick) 생략
+            ## 1. 심리 동기 및 행동 패턴 심층 분석
+            - [핵심 요약 포인트 1]
+            - [핵심 요약 포인트 2]
+            (선천적 출생 기운, 체액적 특성, 9원 내면 동기가 융합된 심층 서술을 10~15줄 이상의 대량의 텍스트로 작성)
 
----
+            ## 2. 직무 적합도 및 핵심 역량 정밀 진단
+            - [핵심 요약 포인트 1]
+            - [핵심 요약 포인트 2]
+            (종합된 성향을 바탕으로 가장 높은 성과를 낼 수 있는 직무 환경과 역량 발휘 시나리오를 심도 있게 대량 서술)
 
-```python
-import matplotlib.pyplot as plt
-import numpy as np
+            ## 3. 역량 다각화 및 사고력 향상 전략
+            - [핵심 요약 포인트 1]
+            - [핵심 요약 포인트 2]
+            (현 상태를 넘어서기 위한 다차원적 사고력 향상 및 역량 확장 방법론 상세 서술)
 
-# 1. 설정 및 가상 데이터 준비 (대량 출력용)
-num_records = 12 # 한 페이지에 출력할 개체 수
-categories_bar = ['A', 'B', 'C', 'D', 'E']
-enneagram_types = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+            ## 4. 강점·약점 종합 및 개선 방향
+            - [핵심 요약 포인트 1]
+            - [핵심 요약 포인트 2]
+            (선천적 강점을 극대화하고 약점을 보완하는 실질적 방향 제시)
 
-# 2. 여백 없는 서브플롯 그리드 설정 (6행 4열: 12명 * (막대1 + 방사형1))
-# A4 비율: figsize=(8.27, 11.69)
-fig, axes = plt.subplots(6, 4, figsize=(8.27, 11.69))
-
-# 여백 및 요소 간격 최소화 (빈 공간 제거)
-plt.subplots_adjust(left=0.01, right=0.99, bottom=0.01, top=0.99, wspace=0.05, hspace=0.05)
-
-for i in range(num_records):
-    row = i // 2
-    col_base = (i % 2) * 2
-    
-    # 데이터 난수 생성 (실제 데이터 맵핑 위치)
-    bar_data = np.random.randint(10, 100, 5)
-    enneagram_data = np.random.randint(10, 100, 9)
-    
-    # --- [1] 종합 성향 지표 (막대그래프) ---
-    ax_bar = axes[row, col_base]
-    ax_bar.bar(categories_bar, bar_data, color='#4A90E2', width=0.8)
-    ax_bar.set_xticks([]) # 시각적 밀집도를 위해 축 눈금 제거
-    ax_bar.set_yticks([])
-    ax_bar.spines['top'].set_visible(False)
-    ax_bar.spines['right'].set_visible(False)
-    
-    # --- [2] 에니어그램 점수표 (9각형 도표) ---
-    # 기본 사각형 axes를 지우고 Polar 좌표계로 덮어쓰기
-    axes[row, col_base + 1].remove()
-    ax_radar = fig.add_subplot(6, 4, row * 4 + col_base + 2, polar=True)
-    
-    # 9각형 각도 계산 및 다각형 닫기
-    angles = np.linspace(0, 2 * np.pi, 9, endpoint=False).tolist()
-    enneagram_data = np.append(enneagram_data, enneagram_data[0])
-    angles += angles[:1]
-    
-    # 도표 렌더링
-    ax_radar.plot(angles, enneagram_data, color='#E24A4A', linewidth=1.2)
-    ax_radar.fill(angles, enneagram_data, color='#E24A4A', alpha=0.3)
-    
-    # 9각형 라벨 세팅 및 불필요한 내부 원형 눈금 제거
-    ax_radar.set_thetagrids(np.degrees(angles[:-1]), enneagram_types, fontsize=7)
-    ax_radar.set_yticklabels([]) 
-    ax_radar.spines['polar'].set_visible(False) # 외곽선 제거로 밀집도 극대화
-
-# 대량 출력용 PDF 저장 (pad_inches=0 으로 렌더링 여백 삭감)
-# plt.savefig('output_bulk.pdf', bbox_inches='tight', pad_inches=0)
-plt.show()
+            ## 🎯 마스터 플랜 (Action Guide)
+            | 구분 | 세부 실행 과제 및 지침 |
+            | :--- | :--- |
+            | **실질적 추천 1** | (행동 중심의 구체적이고 실질적인 과제 제시) |
+            | **실질적 추천 2** | (행동 중심의 구체적이고 실질적인 과제 제시) |
+            | **실질적 추천 3** | (행동 중심의 구체적이고 실질적인 과제 제시) |
+            | **인문학 교양** | (사고 확장을 위한 통섭적 인문학 접근법 또는 도서 추천) |
+            | **모니터링 & 멘토링** | (정기적 실행 모니터링 체계와 멘토 확보 방안) |
+            | **새로운 도전** | (안전지대를 벗어나기 위한 새로운 도전 목표 제시) |
+            """
+            
+            user_data = f"""
+            - 이름: {name}, 생년월일: {birth}, 생체 기질: {blood_type}
+            - 9원 성향 지표 (20점 만점): 
+              1번({e1}), 2번({e2}), 3번({e3}), 4번({e4}), 5번({e5}), 
+              6번({e6}), 7번({e7}), 8번({e8}), 9번({e9})
+            """
+            
+            response = client.chat.completions.create(
+                model="gpt-4o-mini", 
+                temperature=0.7, 
+                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_data}]
+            )
+            raw_content = response.choices[0].message.content.strip()
+            
+            # 예측 점수 파싱
+            comp_scores = [85, 75, 80, 70, 90] # 기본값
+            score_match = re.search(r'<SCORES>(.*?)</SCORES>', raw_content)
+            if score_match:
+                score_str = score_match.group(1)
+                nums = re.findall(r'\d+', score_str)
+                if len(nums) >= 5:
+                    comp_scores = [int(n) for n in nums[:5]]
+            
+            # 태그 제거한 클린 텍스트
+            clean_content = re.sub(r'<SCORES>.*?</SCORES>\n*', '', raw_content, flags=re.DOTALL)
+            nine_scores = [e1, e2, e3, e4, e5, e6, e7, e8, e9]
+            
+            st.success("🧭 다차원 성향 분석 레포트가 완성되었습니다.")
+            
+            # 화면 UI 렌더링
+            st.markdown("<div class='report-box'>", unsafe_allow_html=True)
+            st.markdown(clean_content)
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # PDF 생성 및 다운로드
+            pdf_file = create_pdf(clean_content, name, comp_scores, nine_scores)
+            with open(pdf_file, "rb") as f:
+                st.download_button("📕 다차원 분석 PDF 다운로드", data=f, file_name=pdf_file, mime="application/pdf", use_container_width=True)
